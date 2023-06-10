@@ -174,10 +174,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="console.cpp" />
+    <ClCompile Include="graph.cpp" />
+    <ClCompile Include="input.cpp" />
+    <ClCompile Include="properties.cpp" />
+    <ClCompile Include="serialize.cpp" />
+    <ClCompile Include="settings.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="console.h" />
+    <ClInclude Include="graph.h" />
+    <ClInclude Include="input.h" />
+    <ClInclude Include="properties.h" />
+    <ClInclude Include="serialize.h" />
+    <ClInclude Include="settings.h" />
+    <ClInclude Include="tools.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

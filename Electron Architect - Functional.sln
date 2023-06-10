@@ -10,6 +10,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Electron Architect - Functi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "raylib", "D:\Repo\passion-projects\raylib\projects\VS2019\raylib\raylib.vcxproj", "{E89D61AC-55DE-4482-AFD4-DF7242EBC859}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{110A9426-1F0C-42E3-9922-2326B34EBCF5}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug.DLL|x64 = Debug.DLL|x64
