@@ -3,6 +3,8 @@
 #include "panel.h"
 #include "console.h"
 #include "properties.h"
+#include "tools.h"
+#include "graph.h"
 
 int main()
 {
@@ -14,7 +16,12 @@ int main()
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
-    panel::Panel* panels[] = { &console::consolePanel, &properties::propertiesPanel };
+    panel::Panel* panels[] = {
+        &console::consolePanel,
+        &properties::propertiesPanel,
+        &tools::toolsPanel,
+        &graph::graphPanel
+    };
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
     auto shiftToFront = [&panels](panel::Panel* panel) {
