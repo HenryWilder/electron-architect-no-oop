@@ -1,11 +1,5 @@
 #include "panel.h"
 
-// Inclusive
-bool Between(int min, int x, int max)
-{
-    return min <= x && x <= max;
-}
-
 namespace panel
 {
     Color background = DARKGRAY;
@@ -33,8 +27,10 @@ namespace panel
         int innerL{ outerL + panelDraggableWidth }, innerR{ outerR - panelDraggableWidth },
             innerT{ outerT + panelDraggableWidth }, innerB{ outerB - panelDraggableWidth };
 
-        bool isLDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL) }, isRDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR) },
-             isTDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT) }, isBDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB) };
+        bool isLDraggable{ ((int)draggable & (int)DraggableEdges::EdgeL) == (int)DraggableEdges::EdgeL },
+             isRDraggable{ ((int)draggable & (int)DraggableEdges::EdgeR) == (int)DraggableEdges::EdgeR },
+             isTDraggable{ ((int)draggable & (int)DraggableEdges::EdgeT) == (int)DraggableEdges::EdgeT },
+             isBDraggable{ ((int)draggable & (int)DraggableEdges::EdgeB) == (int)DraggableEdges::EdgeB };
 
         // We already know mouse is within outer bounds, so we only need to test inner bounds here.
 
@@ -80,17 +76,17 @@ namespace panel
         return result;
     }
 
-    void DrawPanel(const char* title, const Bounds& rect)
+    void DrawPanel(const Panel* panel)
     {
         // Main panel
-        DrawRectangle(rect.xmin, rect.ymin, rect.xmax - rect.xmin, rect.ymax - rect.ymin, accent);
+        DrawRectangle(panel->bounds.xmin, panel->bounds.ymin, panel->bounds.xmax - panel->bounds.xmin, panel->bounds.ymax - panel->bounds.ymin, accent);
         constexpr int borderInset = borderWidth * 2;
-        DrawRectangle(rect.xmin + borderWidth, rect.ymin + borderWidth, rect.xmax - rect.xmin - borderInset, rect.ymax - rect.ymin - borderInset, background);
+        DrawRectangle(panel->bounds.xmin + borderWidth, panel->bounds.ymin + borderWidth, panel->bounds.xmax - panel->bounds.xmin - borderInset, panel->bounds.ymax - panel->bounds.ymin - borderInset, background);
 
         // Title section
         constexpr int titleBarHeight = titlePaddingY * 2 + titleSize;
-        DrawRectangle(rect.xmin, rect.ymin, rect.xmax - rect.xmin, titleBarHeight, accent);
-        DrawText(title, rect.xmin + titlePaddingX, rect.ymin + titlePaddingY, titleSize, foreground);
+        DrawRectangle(panel->bounds.xmin, panel->bounds.ymin, panel->bounds.xmax - panel->bounds.xmin, titleBarHeight, accent);
+        DrawText(panel->title, panel->bounds.xmin + titlePaddingX, panel->bounds.ymin + titlePaddingY, titleSize, foreground);
     }
 
     void DrawPanelDragElement(Bounds rect, const PanelHover& hover)

@@ -26,6 +26,12 @@ namespace panel
         int xmin, ymin, xmax, ymax;
     };
 
+    struct Panel
+    {
+        const char* title;
+        Bounds bounds;
+    };
+
     // Uses bitflags
     // Each bit is an independent boolean
     enum class DraggableEdges
@@ -42,16 +48,6 @@ namespace panel
 
         All = Horizontal | Vertical, // Shorthand for the set of all edges
     };
-
-    inline DraggableEdges operator&(const DraggableEdges lvalue, const DraggableEdges rvalue)
-    {
-        return (DraggableEdges)((int)lvalue & (int)rvalue);
-    }
-
-    inline bool HasDraggableEdgeFlag(const DraggableEdges value, const DraggableEdges mask)
-    {
-        return (value & mask) == mask;
-    }
 
     // Uses bitflags
     // Flags are contextual to other flags
@@ -104,8 +100,16 @@ namespace panel
         // 3: Bottom Right
         _Corner = 3,
 
+        // 11_1 - Helper
+        // Use with & and CornerL or CornerR to test which one the hover might be
+        _CornerHorizontal = Corner | 1,
+
         CornerL = Corner | 0, // 11_0 - For corners - Hover contains left edge
         CornerR = Corner | 1, // 11_1 - For corners - Hover contains right edge
+
+        // 111_ - Helper
+        // Use with & and CornerT or CornerB to test which one the hover might be
+        _CornerVertical = Corner | 2,
 
         CornerT = Corner | 0, // 110_ - For corners - Hover contains top edge
         CornerB = Corner | 2, // 111_ - For corners - Hover contains bottom edge
@@ -116,45 +120,28 @@ namespace panel
         CornerBR = Corner | CornerB | CornerR, // 1111 - Bottom right corner
     };
 
-    inline HoverSection operator&(const HoverSection lvalue, const HoverSection rvalue)
-    {
-        return (HoverSection)((int)lvalue & (int)rvalue);
-    }
-
     // Might be an edge or a corner, but contains a left edge
     inline bool HasLeft(const HoverSection section)
     {
-        return
-            section == HoverSection::EdgeL ||
-            section == HoverSection::CornerTL ||
-            section == HoverSection::CornerBL;
+        return section == HoverSection::EdgeL || ((int)section & (int)HoverSection::_CornerHorizontal) == (int)HoverSection::CornerL;
     }
 
     // Might be an edge or a corner, but contains a left edge
     inline bool HasRight(const HoverSection section)
     {
-        return
-            section == HoverSection::EdgeR ||
-            section == HoverSection::CornerTR ||
-            section == HoverSection::CornerBR;
+        return section == HoverSection::EdgeR || ((int)section & (int)HoverSection::_CornerHorizontal) == (int)HoverSection::CornerR;
     }
 
     // Might be an edge or a corner, but contains a left edge
     inline bool HasTop(const HoverSection section)
     {
-        return
-            section == HoverSection::EdgeT ||
-            section == HoverSection::CornerTL ||
-            section == HoverSection::CornerTR;
+        return section == HoverSection::EdgeT || ((int)section & (int)HoverSection::_CornerVertical) == (int)HoverSection::CornerT;
     }
 
     // Might be an edge or a corner, but contains a left edge
     inline bool HasBottom(const HoverSection section)
     {
-        return
-            section == HoverSection::EdgeB ||
-            section == HoverSection::CornerBL ||
-            section == HoverSection::CornerBR;
+        return section == HoverSection::EdgeB || ((int)section & (int)HoverSection::_CornerVertical) == (int)HoverSection::CornerB;
     }
 
     struct PanelHover
@@ -172,7 +159,7 @@ namespace panel
 
         inline operator bool() const
         {
-            return (bool)(identity & HoverSection::Any);
+            return (bool)((int)identity & (int)HoverSection::Any);
         }
     };
 
@@ -180,7 +167,7 @@ namespace panel
     PanelHover CheckPanelCollision(const Bounds& rect, DraggableEdges draggable, int mousex, int mousey);
 
     // Draws a panel with a title bar
-    void DrawPanel(const char* title, const Bounds& rect);
+    void DrawPanel(const Panel* panel);
 
     // Draws the dragging element for a panel
     void DrawPanelDragElement(Bounds rect, const PanelHover& hover);

@@ -3,16 +3,6 @@
 #include "panel.h"
 #include "console.h"
 
-int Min(int a, int b)
-{
-    return b < a ? b : a;
-}
-
-int Max(int a, int b)
-{
-    return b > a ? b : a;
-}
-
 int main()
 {
     int windowWidth = 1280;
@@ -24,9 +14,11 @@ int main()
     *   Load textures, shaders, and meshes    *
     ******************************************/
 
-    panel::Bounds testPanel = { 50, 50, 600, 200 };
+    panel::Panel testPanel1 = { "Panel 1", { 50, 50, 600, 200 }};
+    panel::Panel testPanel2 = { "Panel 2", { 100, 250, 300, 500 }};
+    panel::Panel* panels[] = { &testPanel1, &testPanel2 };
 
-    panel::Bounds* currentlyDragging = nullptr;
+    panel::Panel* currentlyDragging = nullptr;
     panel::PanelHover draggingInfo = panel::PanelHover();
 
     while (!WindowShouldClose())
@@ -45,38 +37,41 @@ int main()
             // Left
             if (panel::HasLeft(draggingInfo.identity))
             {
-                int x = Clamp(GetMouseX(), 0, currentlyDragging->xmax - panel::minWidth);
-                draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->xmin = x) + panel::panelDraggableWidth;
+                int x = Clamp(GetMouseX(), 0, currentlyDragging->bounds.xmax - panel::minWidth);
+                draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->bounds.xmin = x) + panel::panelDraggableWidth;
             }
             // Right
             else if (panel::HasRight(draggingInfo.identity))
             {
-                int x = Clamp(GetMouseX(), currentlyDragging->xmin + panel::minWidth, windowWidth);
-                draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->xmax = x) - panel::panelDraggableWidth;
+                int x = Clamp(GetMouseX(), currentlyDragging->bounds.xmin + panel::minWidth, windowWidth);
+                draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->bounds.xmax = x) - panel::panelDraggableWidth;
             }
             // Top
             if (panel::HasTop(draggingInfo.identity))
             {
-                int y = Clamp(GetMouseY(), 0, currentlyDragging->ymax - panel::minHeight);
-                draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->ymin = y) + panel::panelDraggableWidth;
+                int y = Clamp(GetMouseY(), 0, currentlyDragging->bounds.ymax - panel::minHeight);
+                draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->bounds.ymin = y) + panel::panelDraggableWidth;
             }
             // Bottom
             else if (panel::HasBottom(draggingInfo.identity))
             {
-                int y = Clamp(GetMouseY(), currentlyDragging->ymin + panel::minHeight, windowHeight);
-                draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->ymax = y) - panel::panelDraggableWidth;
+                int y = Clamp(GetMouseY(), currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
+                draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->bounds.ymax = y) - panel::panelDraggableWidth;
             }
         }
         else
         {
-            panel::PanelHover testPanelHover = panel::CheckPanelCollision(testPanel, panel::DraggableEdges::All, GetMouseX(), GetMouseY());
-
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
-                if (testPanelHover)
+                for (panel::Panel* currentPanel : panels)
                 {
-                    currentlyDragging = &testPanel;
-                    draggingInfo = testPanelHover;
+                    panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, panel::DraggableEdges::All, GetMouseX(), GetMouseY());
+                    if (panelHover)
+                    {
+                        currentlyDragging = currentPanel;
+                        draggingInfo = panelHover;
+                        break;
+                    }
                 }
             }
         }
@@ -91,11 +86,14 @@ int main()
 
             SetMouseCursor(MouseCursor::MOUSE_CURSOR_DEFAULT);
 
-            panel::DrawPanel("Panel", testPanel);
+            for (panel::Panel* currentPanel : panels)
+            {
+                panel::DrawPanel(currentPanel);
+            }
 
             if (currentlyDragging)
             {
-                panel::DrawPanelDragElement(*currentlyDragging, draggingInfo);
+                panel::DrawPanelDragElement(currentlyDragging->bounds, draggingInfo);
             }
 
         } EndDrawing();
