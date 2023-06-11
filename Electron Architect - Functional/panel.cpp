@@ -23,57 +23,59 @@ namespace panel
         int outerL{ rect.xmin }, outerR{ rect.xmax },
             outerT{ rect.ymin }, outerB{ rect.ymax };
 
-        bool outOfBounds =
+        bool isOutOfBounds =
             mousex < outerL || outerR < mousex ||
             mousey < outerT || outerB < mousey;
 
         // Return if mouse is outside the panel
-        if (outOfBounds) return result;
+        if (isOutOfBounds) return result;
 
         int innerL{ outerL + panelDraggableWidth }, innerR{ outerR - panelDraggableWidth },
             innerT{ outerT + panelDraggableWidth }, innerB{ outerB - panelDraggableWidth };
 
-        bool canDragL{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL) }, canDragR{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR) },
-             canDragT{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT) }, canDragB{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB) };
+        bool isLDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL) }, isRDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR) },
+             isTDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT) }, isBDraggable{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB) };
 
-        bool inDraggableL{ canDragL && outerL <= mousex && mousex <= innerL }, inDraggableR{ canDragR && innerR <= mousex && mousex <= outerR },
-             inDraggableT{ canDragT && outerT <= mousey && mousey <= innerT }, inDraggableB{ canDragB && innerB <= mousey && mousey <= outerB };
+        // We already know mouse is within outer bounds, so we only need to test inner bounds here.
 
-        bool inDraggableRow{ inDraggableT || inDraggableB };
+        bool isInDraggableL{ isLDraggable && mousex <= innerL }, isInDraggableR{ isRDraggable && innerR <= mousex },
+             isInDraggableT{ isTDraggable && mousey <= innerT }, isInDraggableB{ isBDraggable && innerB <= mousey };
 
-        bool touchesDraggableL{ inDraggableL || inDraggableRow },
-             touchesDraggableR{ inDraggableR || inDraggableRow };
+        bool isInDraggableRow{ isInDraggableT || isInDraggableB };
 
         // Left
-        if (inDraggableL)
+        if (isInDraggableL)
         {
-                 if (inDraggableT) result.identity = HoverSection::CornerTL;
-            else if (inDraggableB) result.identity = HoverSection::CornerBL;
-            else                   result.identity = HoverSection::EdgeL;
+                 if (isInDraggableT) result.identity = HoverSection::CornerTL;
+            else if (isInDraggableB) result.identity = HoverSection::CornerBL;
+            else                     result.identity = HoverSection::EdgeL;
         }
         // Right
-        else if (inDraggableR)
+        else if (isInDraggableR)
         {
-                 if (inDraggableT) result.identity = HoverSection::CornerTR;
-            else if (inDraggableB) result.identity = HoverSection::CornerBR;
-            else                   result.identity = HoverSection::EdgeR;
+                 if (isInDraggableT) result.identity = HoverSection::CornerTR;
+            else if (isInDraggableB) result.identity = HoverSection::CornerBR;
+            else                     result.identity = HoverSection::EdgeR;
         }
         // Top or bottom - but NOT left nor right
-        else if (inDraggableRow)
+        else if (isInDraggableRow)
         {
-                 if (inDraggableT) result.identity = HoverSection::EdgeT;
-            else if (inDraggableB) result.identity = HoverSection::EdgeB;
-            // inDraggableB is implied by inDraggableRow, but I still want it to be explicit.
+                 if (isInDraggableT) result.identity = HoverSection::EdgeT;
+            else if (isInDraggableB) result.identity = HoverSection::EdgeB;
+            // isInDraggableB is implied by isInDraggableRow, but I still want it to be explicit.
             // The compiler *should* optimize the redundant "if" away. Probably.
         }
 
         // Return if none were satisfied
         if (result.identity == HoverSection::None) return PanelHover();
 
-        result.bounds.xmin = touchesDraggableL ? outerL : innerR;
-        result.bounds.xmax = touchesDraggableR ? outerR : innerL;
-        result.bounds.ymin = inDraggableB ? innerB : outerT;
-        result.bounds.ymax = inDraggableT ? innerT : outerB;
+        bool isTouchingDraggableL{ isInDraggableL || isInDraggableRow },
+             isTouchingDraggableR{ isInDraggableR || isInDraggableRow };
+
+        result.bounds.xmin = isTouchingDraggableL ? outerL : innerR;
+        result.bounds.xmax = isTouchingDraggableR ? outerR : innerL;
+        result.bounds.ymin =       isInDraggableB ? innerB : outerT;
+        result.bounds.ymax =       isInDraggableT ? innerT : outerB;
 
         return result;
     }
