@@ -10,9 +10,7 @@ int main()
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
-    panel::Panel testPanel1 = { "Panel 1", { 50, 50, 600, 200 }};
-    panel::Panel testPanel2 = { "Panel 2", { 100, 250, 300, 500 }};
-    panel::Panel* panels[] = { &testPanel1, &testPanel2 };
+    panel::Panel* panels[] = { &console::console };
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
     auto shiftToFront = [&panels](panel::Panel* panel) {
@@ -56,7 +54,7 @@ int main()
         {
             for (panel::Panel* currentPanel : panels)
             {
-                panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, panel::DraggableEdges::All, mouseCurrX, mouseCurrY);
+                panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, currentPanel->draggable, mouseCurrX, mouseCurrY);
                 if (panelHover)
                 {
                     currentlyDragging = currentPanel;

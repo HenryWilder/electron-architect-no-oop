@@ -20,18 +20,69 @@ namespace panel
     constexpr int minWidth= 60; // Minimum width of a standard panel in pixels
     constexpr int minHeight = 30; // Minimum height of a standard panel in pixels
 
-    // Panel bounds
+    // int | int*
+    struct IntOrIntPtr
+    {
+        IntOrIntPtr()
+            : tag{ Tag::Val }, ref{ } { }
+
+        IntOrIntPtr(int  x)
+            : tag{ Tag::Val }, ref{ } { val = x; }
+
+        IntOrIntPtr(int *x)
+            : tag{ Tag::Ref }, ref{ x } { }
+
+        enum class Tag { Val, Ref } tag;
+
+        union { int val; int *ref; };
+
+        inline bool IsVal() const { return tag == Tag::Val; }
+        inline bool IsRef() const { return tag == Tag::Ref; }
+
+        // Returns value whether reference or non-reference
+        inline operator int() const { return IsRef() ? *ref : val; }
+
+        // Replaces the reference
+        inline void SetRef(IntOrIntPtr* newRef)
+        {
+            tag = Tag::Ref;
+            ref = newRef->IsRef() ? newRef->ref : &newRef->val;
+        }
+
+        // Replaces the reference
+        inline void SetRef(int* newRef)
+        {
+            tag = Tag::Ref;
+            ref = newRef;
+        }
+
+        // Sets the value
+        inline IntOrIntPtr& operator=(int newVal)
+        {
+            if (IsRef())
+                *ref = newVal;
+            else
+                val = newVal;
+            return *this;
+        }
+
+        // Sets the value to match - Use SetRef to replace the reference
+        inline IntOrIntPtr& operator=(IntOrIntPtr newVal)
+        {
+            int _newVal = (int)newVal;
+            return *this = _newVal;
+        }
+    };
+
+    // Panel bounds - Useable for non-referencing bounds
     struct Bounds
     {
-        int xmin, ymin, xmax, ymax;
+        IntOrIntPtr xmin, ymin, xmax, ymax;
     };
 
-    struct Panel
-    {
-        const char* title;
-        Bounds bounds;
-    };
-
+    // Can be referenced to keep RefBounds synced with window
+    Bounds windowBounds =  { };
+    
     // Uses bitflags
     // Each bit is an independent boolean
     enum class DraggableEdges
@@ -47,6 +98,13 @@ namespace panel
         Vertical   = EdgeT | EdgeB, // Shorthand for the set of top/bottom edges - Can also be used as a mask
 
         All = Horizontal | Vertical, // Shorthand for the set of all edges
+    };
+
+    struct Panel
+    {
+        const char* title;
+        Bounds bounds;
+        DraggableEdges draggable;
     };
 
     // Uses bitflags
