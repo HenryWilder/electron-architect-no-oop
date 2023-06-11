@@ -65,25 +65,25 @@ int main()
             // Left
             if (draggingLeft)
             {
-                int x = Min(GetMouseX(), currentlyDragging->xmax - panel::minWidth);
+                int x = Clamp(GetMouseX(), 0, currentlyDragging->xmax - panel::minWidth);
                 draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->xmin = x) + panel::panelDraggableWidth;
             }
             // Right
             else if (draggingRight)
             {
-                int x = Max(GetMouseX(), currentlyDragging->xmin + panel::minWidth);
+                int x = Clamp(GetMouseX(), currentlyDragging->xmin + panel::minWidth, windowWidth);
                 draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->xmax = x) - panel::panelDraggableWidth;
             }
             // Top
             if (draggingTop)
             {
-                int y = Min(GetMouseY(), currentlyDragging->ymax - panel::minHeight);
+                int y = Clamp(GetMouseY(), 0, currentlyDragging->ymax - panel::minHeight);
                 draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->ymin = y) + panel::panelDraggableWidth;
             }
             // Bottom
             else if (draggingBottom)
             {
-                int y = Max(GetMouseY(), currentlyDragging->ymin + panel::minHeight);
+                int y = Clamp(GetMouseY(), currentlyDragging->ymin + panel::minHeight, windowHeight);
                 draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->ymax = y) - panel::panelDraggableWidth;
             }
         }
