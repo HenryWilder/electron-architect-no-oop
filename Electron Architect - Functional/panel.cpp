@@ -114,7 +114,7 @@ namespace panel
         return PanelHover(section, bounds);
     }
 
-    void DrawPanel(const char* title, Bounds rect, PanelHover hover)
+    void DrawPanel(const char* title, Bounds rect)
     {
         // Main panel
         DrawRectangle(rect.xmin, rect.ymin, rect.xmax - rect.xmin, rect.ymax - rect.ymin, accent);
@@ -125,7 +125,10 @@ namespace panel
         constexpr int titleBarHeight = titlePaddingY * 2 + titleSize;
         DrawRectangle(rect.xmin, rect.ymin, rect.xmax - rect.xmin, titleBarHeight, accent);
         DrawText(title, rect.xmin + titlePaddingX, rect.ymin + titlePaddingY, titleSize, foreground);
+    }
 
+    void DrawPanelDragElement(Bounds rect, PanelHover hover)
+    {
         if (hover)
         {
             int x = hover.bounds.xmin;
@@ -142,9 +145,31 @@ namespace panel
             }
             else
             {
-                cursor = HasHoverSectionFlag(hover, HoverSection::EdgeRow) ? MOUSE_CURSOR_RESIZE_NS : MOUSE_CURSOR_RESIZE_EW;
+                cursor = HasHoverSectionFlag(hover, HoverSection::EdgeRow)
+                    ? MOUSE_CURSOR_RESIZE_NS
+                    : MOUSE_CURSOR_RESIZE_EW;
             }
             SetMouseCursor(cursor);
+        }
+    }
+
+    void PanelHover::SetPos(int newPos)
+    {
+        int x = bounds.xmin;
+        int y = bounds.ymin;
+        int w = bounds.xmax - bounds.xmin;
+        int h = bounds.ymax - bounds.ymin;
+
+        switch (identity)
+        {
+        case HoverSection::EdgeL: bounds.xmax = (bounds.xmin = newPos) + w; break;
+        case HoverSection::EdgeR: bounds.xmin = (bounds.xmax = newPos) - w; break;
+        case HoverSection::EdgeT: bounds.ymax = (bounds.ymin = newPos) + h; break;
+        case HoverSection::EdgeB: bounds.ymin = (bounds.ymax = newPos) - h; break;
+        case HoverSection::CornerTL: break;
+        case HoverSection::CornerTR: break;
+        case HoverSection::CornerBL: break;
+        case HoverSection::CornerBR: break;
         }
     }
 }

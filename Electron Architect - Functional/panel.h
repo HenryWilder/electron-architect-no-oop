@@ -38,12 +38,12 @@ namespace panel
         All = Horizontal | Vertical, // Shorthand for the set of all edges
     };
 
-    inline DraggableEdges operator&(DraggableEdges lvalue, DraggableEdges rvalue)
+    inline DraggableEdges operator&(const DraggableEdges lvalue, const DraggableEdges rvalue)
     {
         return (DraggableEdges)((int)lvalue & (int)rvalue);
     }
 
-    inline bool HasDraggableEdgeFlag(DraggableEdges value, DraggableEdges mask)
+    inline bool HasDraggableEdgeFlag(const DraggableEdges value, const DraggableEdges mask)
     {
         return (value & mask) == mask;
     }
@@ -103,22 +103,22 @@ namespace panel
         CornerBR = Corner | CornerB | CornerR, // 1111 - Bottom right corner
     };
 
-    inline HoverSection operator&(HoverSection lvalue, HoverSection rvalue)
+    inline HoverSection operator&(const HoverSection lvalue, const HoverSection rvalue)
     {
         return (HoverSection)((int)lvalue & (int)rvalue);
     }
 
-    inline HoverSection operator|(HoverSection lvalue, HoverSection rvalue)
+    inline HoverSection operator|(const HoverSection lvalue, const HoverSection rvalue)
     {
         return (HoverSection)((int)lvalue | (int)rvalue);
     }
 
-    inline HoverSection& operator|=(HoverSection& lvalue, HoverSection rvalue)
+    inline HoverSection& operator|=(HoverSection& lvalue, const HoverSection rvalue)
     {
         return (lvalue = (HoverSection)((int)lvalue | (int)rvalue));
     }
 
-    inline bool HasHoverSectionFlag(HoverSection value, HoverSection mask)
+    inline bool HasHoverSectionFlag(const HoverSection value, const HoverSection mask)
     {
         return (value & mask) == mask;
     }
@@ -129,22 +129,29 @@ namespace panel
         PanelHover(HoverSection identity, Bounds bounds) : identity(identity), bounds(bounds) {}
 
         HoverSection identity;
-        Bounds bounds; // Will be garbage data if identity says there is no hover
+        Bounds bounds; // Bounds of specifically the hover element - Will be garbage data if identity says there is no hover
 
-        inline operator HoverSection()
+        // Sets the position of the relevant element
+        // This is contextual to the identity
+        void SetPos(int newPos);
+
+        inline operator HoverSection() const
         {
             return identity;
         }
 
-        inline operator bool()
+        inline operator bool() const
         {
             return (bool)(identity & HoverSection::Any);
         }
     };
 
-    // Draws a panel with a title bar and optional highlighting for draggability
+    // Checks whether the mouse is hovering a draggable part of the panel
     PanelHover CheckPanelCollision(Bounds rect, DraggableEdges draggable, int mousex, int mousey);
 
-    // Draws a panel with a title bar and optional highlighting for draggability
-    void DrawPanel(const char* title, Bounds rect, PanelHover hover = PanelHover());
+    // Draws a panel with a title bar
+    void DrawPanel(const char* title, Bounds rect);
+
+    // Draws the dragging element for a panel
+    void DrawPanelDragElement(Bounds rect, PanelHover hover);
 }
