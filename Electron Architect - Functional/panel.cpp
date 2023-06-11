@@ -136,20 +136,6 @@ namespace panel
             int w = hover.bounds.xmax - x;
             int h = hover.bounds.ymax - y;
             DrawRectangle(x, y, w, h, draggableHighlight);
-            int cursor = MOUSE_CURSOR_RESIZE_ALL;
-            if (HasHoverSectionFlag(hover, HoverSection::Corner))
-            {
-                cursor = (hover == HoverSection::CornerTL || hover == HoverSection::CornerBR)
-                    ? MOUSE_CURSOR_RESIZE_NWSE
-                    : MOUSE_CURSOR_RESIZE_NESW;
-            }
-            else
-            {
-                cursor = HasHoverSectionFlag(hover, HoverSection::EdgeRow)
-                    ? MOUSE_CURSOR_RESIZE_NS
-                    : MOUSE_CURSOR_RESIZE_EW;
-            }
-            SetMouseCursor(cursor);
         }
     }
 }

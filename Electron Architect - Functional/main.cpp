@@ -32,11 +32,6 @@ int main()
 
         if (currentlyDragging)
         {
-            int x = draggingInfo.bounds.xmin;
-            int y = draggingInfo.bounds.ymin;
-            int w = draggingInfo.bounds.xmax - x;
-            int h = draggingInfo.bounds.ymax - y;
-
             bool draggingLeft =
                 draggingInfo.identity == panel::HoverSection::EdgeL ||
                 draggingInfo.identity == panel::HoverSection::CornerTL ||
@@ -60,22 +55,22 @@ int main()
             // Left
             if (draggingLeft)
             {
-                draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->xmin = GetMouseX()) + w;
+                draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->xmin = GetMouseX()) + panel::panelDraggableWidth;
             }
             // Right
             else if (draggingRight)
             {
-                draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->xmax = GetMouseX()) - w;
+                draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->xmax = GetMouseX()) - panel::panelDraggableWidth;
             }
             // Top
             if (draggingTop)
             {
-                draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->ymin = GetMouseY()) + h;
+                draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->ymin = GetMouseY()) + panel::panelDraggableWidth;
             }
             // Bottom
             else if (draggingBottom)
             {
-                draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->ymax = GetMouseY()) - h;
+                draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->ymax = GetMouseY()) - panel::panelDraggableWidth;
             }
         }
         else
