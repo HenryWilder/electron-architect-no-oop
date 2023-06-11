@@ -122,7 +122,7 @@ namespace panel
                 bounds.ymax = innerT;
                 return PanelHover(HoverSection::EdgeT, bounds);
             }
-            else if (inDraggableB)
+            else // (inDraggableB)
             {
                 bounds.ymin = innerB;
                 bounds.ymax = outerB;
