@@ -10,10 +10,6 @@ int main()
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
-    /******************************************
-    *   Load textures, shaders, and meshes    *
-    ******************************************/
-
     panel::Panel testPanel1 = { "Panel 1", { 50, 50, 600, 200 }};
     panel::Panel testPanel2 = { "Panel 2", { 100, 250, 300, 500 }};
     panel::Panel* panels[] = { &testPanel1, &testPanel2 };
@@ -21,11 +17,15 @@ int main()
     panel::Panel* currentlyDragging = nullptr;
     panel::PanelHover draggingInfo = panel::PanelHover();
 
+    // Offset from mouse when dragging - Set when drag begins
+    int mouseOffsX{ }, mouseOffsY{ };
+
+    int mousePrevX{ }, mousePrevY{ };
+
     while (!WindowShouldClose())
     {
-        /******************************************
-        *   Simulate frame and update variables   *
-        ******************************************/
+        int mouseCurrX{ GetMouseX() }, mouseCurrY{ GetMouseY() };
+        int mouseDltaX{ mouseCurrX - mousePrevX }, mouseDltaY{ mouseCurrY - mousePrevY };
 
         if (currentlyDragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
@@ -36,11 +36,17 @@ int main()
         {
             for (panel::Panel* currentPanel : panels)
             {
-                panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, panel::DraggableEdges::All, GetMouseX(), GetMouseY());
+                panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, panel::DraggableEdges::All, mouseCurrX, mouseCurrY);
                 if (panelHover)
                 {
                     currentlyDragging = currentPanel;
                     draggingInfo = panelHover;
+
+                    int xBound = panel::HasLeft(panelHover.identity) ? currentPanel->bounds.xmin : currentPanel->bounds.xmax;
+                    int yBound = panel::HasTop (panelHover.identity) ? currentPanel->bounds.ymin : currentPanel->bounds.ymax;
+                    mouseOffsX = xBound - mouseCurrX;
+                    mouseOffsY = yBound - mouseCurrY;
+
                     break;
                 }
             }
@@ -51,32 +57,28 @@ int main()
             // Left
             if (panel::HasLeft(draggingInfo.identity))
             {
-                int x = Clamp(GetMouseX(), 0, currentlyDragging->bounds.xmax - panel::minWidth);
+                int x = Clamp(mouseCurrX + mouseOffsX, 0, currentlyDragging->bounds.xmax - panel::minWidth);
                 draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->bounds.xmin = x) + panel::panelDraggableWidth;
             }
             // Right
             else if (panel::HasRight(draggingInfo.identity))
             {
-                int x = Clamp(GetMouseX(), currentlyDragging->bounds.xmin + panel::minWidth, windowWidth);
+                int x = Clamp(mouseCurrX + mouseOffsX, currentlyDragging->bounds.xmin + panel::minWidth, windowWidth);
                 draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->bounds.xmax = x) - panel::panelDraggableWidth;
             }
             // Top
             if (panel::HasTop(draggingInfo.identity))
             {
-                int y = Clamp(GetMouseY(), 0, currentlyDragging->bounds.ymax - panel::minHeight);
+                int y = Clamp(mouseCurrY + mouseOffsY, 0, currentlyDragging->bounds.ymax - panel::minHeight);
                 draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->bounds.ymin = y) + panel::panelDraggableWidth;
             }
             // Bottom
             else if (panel::HasBottom(draggingInfo.identity))
             {
-                int y = Clamp(GetMouseY(), currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
+                int y = Clamp(mouseCurrY + mouseOffsY, currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
                 draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->bounds.ymax = y) - panel::panelDraggableWidth;
             }
         }
-
-        /******************************************
-        *   Draw the frame                        *
-        ******************************************/
 
         BeginDrawing(); {
 
@@ -95,13 +97,10 @@ int main()
             }
 
         } EndDrawing();
+
+        mousePrevX = mouseCurrX;
+        mousePrevY = mouseCurrY;
     }
-
-    /******************************************
-    *   Unload and free memory                *
-    ******************************************/
-
-    // @TODO: Unload variables
 
     CloseWindow();
 
