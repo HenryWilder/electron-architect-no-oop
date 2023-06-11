@@ -14,7 +14,7 @@ int main()
     *   Load textures, shaders, and meshes    *
     ******************************************/
 
-    // @TODO: Load persistent assets & variables
+    struct { int xmin; int ymin; int xmax; int ymax; } panel = { 50, 50, 600, 200 };
 
     while (!WindowShouldClose())
     {
@@ -32,7 +32,9 @@ int main()
 
             ClearBackground(BLACK);
 
-            
+            SetMouseCursor(MouseCursor::MOUSE_CURSOR_DEFAULT);
+
+            panel::DrawPanel("Panel", panel.xmin, panel.ymin, panel.xmax, panel.ymax, true, true, true, true, GetMouseX(), GetMouseY());
 
         } EndDrawing();
     }
