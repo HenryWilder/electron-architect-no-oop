@@ -115,19 +115,40 @@ namespace panel
         return (HoverSection)((int)lvalue & (int)rvalue);
     }
 
-    inline HoverSection operator|(const HoverSection lvalue, const HoverSection rvalue)
+    // Might be an edge or a corner, but contains a left edge
+    inline bool HasLeft(const HoverSection section)
     {
-        return (HoverSection)((int)lvalue | (int)rvalue);
+        return
+            section == HoverSection::EdgeL ||
+            section == HoverSection::CornerTL ||
+            section == HoverSection::CornerBL;
     }
 
-    inline HoverSection& operator|=(HoverSection& lvalue, const HoverSection rvalue)
+    // Might be an edge or a corner, but contains a left edge
+    inline bool HasRight(const HoverSection section)
     {
-        return (lvalue = (HoverSection)((int)lvalue | (int)rvalue));
+        return
+            section == HoverSection::EdgeR ||
+            section == HoverSection::CornerTR ||
+            section == HoverSection::CornerBR;
     }
 
-    inline bool HasHoverSectionFlag(const HoverSection value, const HoverSection mask)
+    // Might be an edge or a corner, but contains a left edge
+    inline bool HasTop(const HoverSection section)
     {
-        return (value & mask) == mask;
+        return
+            section == HoverSection::EdgeT ||
+            section == HoverSection::CornerTL ||
+            section == HoverSection::CornerTR;
+    }
+
+    // Might be an edge or a corner, but contains a left edge
+    inline bool HasBottom(const HoverSection section)
+    {
+        return
+            section == HoverSection::EdgeB ||
+            section == HoverSection::CornerBL ||
+            section == HoverSection::CornerBR;
     }
 
     struct PanelHover
