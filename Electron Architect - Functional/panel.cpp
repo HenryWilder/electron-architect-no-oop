@@ -38,43 +38,50 @@ namespace panel
         *         ob
         */
 
-        int xminDragOuter = xmin - panelDraggableRadius; // Outer Left (ol)
-        int yminDragOuter = ymin - panelDraggableRadius; // Outer Top (ot)
-        int xmaxDragOuter = xmax + panelDraggableRadius; // Outer Right (or)
+        int xminDragOuter = xmin - panelDraggableRadius; // Outer Left   (ol)
+        int xmaxDragOuter = xmax + panelDraggableRadius; // Outer Right  (or)
+        int yminDragOuter = ymin - panelDraggableRadius; // Outer Top    (ot)
         int ymaxDragOuter = ymax + panelDraggableRadius; // Outer Bottom (ob)
 
-        int xminDragInner = xmin + panelDraggableRadius; // Inner Left (il)
-        int yminDragInner = ymin + panelDraggableRadius; // Inner Top (it)
-        int xmaxDragInner = xmax - panelDraggableRadius; // Inner Right (ir)
+        int xminDragInner = xmin + panelDraggableRadius; // Inner Left   (il)
+        int xmaxDragInner = xmax - panelDraggableRadius; // Inner Right  (ir)
+        int yminDragInner = ymin + panelDraggableRadius; // Inner Top    (it)
         int ymaxDragInner = ymax - panelDraggableRadius; // Inner Bottom (ib)
 
-        bool mouseInLCol = Between(xminDragOuter, mousex, xminDragInner) && Between(yminDragOuter, mousey, ymaxDragOuter); // Left
-        bool mouseInTRow = Between(xminDragOuter, mousex, xmaxDragOuter) && Between(yminDragOuter, mousey, yminDragInner); // Top
-        bool mouseInRCol = Between(xmaxDragInner, mousex, xmaxDragOuter) && Between(yminDragOuter, mousey, ymaxDragOuter); // Right
-        bool mouseInBRow = Between(xminDragOuter, mousex, xmaxDragOuter) && Between(ymaxDragOuter, mousey, ymaxDragInner); // Bottom
+        bool mouseInRow = (xminDragOuter <= mousex && mousex <= xmaxDragOuter); // Mouse is within the horizontal bounds
+        bool mouseInCol = (yminDragOuter <= mousey && mousey <= ymaxDragOuter); // Mouse is within the vertical   bounds
 
-        bool inDraggableLCol = mouseInLCol && draggableLeft;
-        bool inDraggableTRow = mouseInTRow && draggableTop;
-        bool inDraggableRCol = mouseInRCol && draggableRight;
-        bool inDraggableBRow = mouseInBRow && draggableBottom;
+        bool mouseInLCol = mouseInCol && (xminDragOuter <= mousex && mousex <= xminDragInner); // Left
+        bool mouseInRCol = mouseInCol && (xmaxDragInner <= mousex && mousex <= xmaxDragOuter); // Right
+        bool mouseInTRow = mouseInRow && (yminDragOuter <= mousey && mousey <= yminDragInner); // Top
+        bool mouseInBRow = mouseInRow && (ymaxDragOuter <= mousey && mousey <= ymaxDragInner); // Bottom
 
-        bool inDraggableTL = inDraggableLCol && inDraggableTRow;
-        bool inDraggableTR = inDraggableTRow && inDraggableRCol;
-        bool inDraggableBR = inDraggableRCol && inDraggableBRow;
-        bool inDraggableBL = inDraggableBRow && inDraggableLCol;
+        bool inDraggableLCol = mouseInLCol && draggableLeft;   // In left   edge and draggable
+        bool inDraggableRCol = mouseInRCol && draggableRight;  // In right  edge and draggable
+        bool inDraggableTRow = mouseInTRow && draggableTop;    // In top    edge and draggable
+        bool inDraggableBRow = mouseInBRow && draggableBottom; // In bottom edge and draggable
 
-        bool inRight = inDraggableRCol; // In right
+        bool inDraggableTL = inDraggableLCol && inDraggableTRow; // In top    left  corner and both are draggable
+        bool inDraggableBR = inDraggableRCol && inDraggableBRow; // In bottom right corner and both are draggable
+        bool inDraggableTR = inDraggableTRow && inDraggableRCol; // In top    right corner and both are draggable
+        bool inDraggableBL = inDraggableBRow && inDraggableLCol; // In bottom left  corner and both are draggable
+
+        bool inRight  = inDraggableRCol; // In right
         bool inBottom = inDraggableBRow; // In bottom
+
         bool inRow = inDraggableTRow || inDraggableBRow; // In row
         bool inCol = inDraggableLCol || inDraggableRCol; // In column
-        bool inCorner = inDraggableTL || inDraggableTR || inDraggableBR || inDraggableBL; // In corner
-        bool inEdge = inDraggableLCol || inDraggableTRow || inDraggableRCol || inDraggableBRow; // In edge
+
+        bool inCorner = inDraggableTL   || inDraggableTR   || inDraggableBR   || inDraggableBL;   // In corner
+        bool inEdge   = inDraggableLCol || inDraggableTRow || inDraggableRCol || inDraggableBRow; // In edge
+
         bool inDraggable = inEdge;
 
-        int x = inRight ? xmaxDragInner : xminDragOuter; // Left corner of the hover element
-        int y = inBottom ? ymaxDragInner : yminDragOuter; // Top corner of the hover element
-        int w = inCorner ? panelDraggableWidth : (inRow ? (xmaxDragOuter - xminDragOuter) : panelDraggableWidth); // Width of the hover element
-        int h = inCorner ? panelDraggableWidth : (inCol ? (ymaxDragOuter - yminDragOuter) : panelDraggableWidth); // Height of the hover element
+        int x = inRight  ? xmaxDragInner : xminDragOuter; // Left corner of the hover element
+        int y = inBottom ? ymaxDragInner : yminDragOuter; // Top  corner of the hover element
+
+        int w = (inCorner || !inRow) ? (panelDraggableWidth) : (xmaxDragOuter - xminDragOuter); // Width  of the hover element
+        int h = (inCorner || !inCol) ? (panelDraggableWidth) : (ymaxDragOuter - yminDragOuter); // Height of the hover element
 
         if (inDraggable)
         {
