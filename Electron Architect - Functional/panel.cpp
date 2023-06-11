@@ -31,87 +31,106 @@ namespace panel
         *         ob
         */
 
-        int xminDragOuter = rect.xmin; // Outer Left   (ol)
-        int xmaxDragOuter = rect.xmax; // Outer Right  (or)
-        int yminDragOuter = rect.ymin; // Outer Top    (ot)
-        int ymaxDragOuter = rect.ymax; // Outer Bottom (ob)
+        bool canDragL = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL);
+        bool canDragR = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR);
+        bool canDragT = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT);
+        bool canDragB = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB);
 
-        int xminDragInner = rect.xmin + panelDraggableWidth; // Inner Left   (il)
-        int xmaxDragInner = rect.xmax - panelDraggableWidth; // Inner Right  (ir)
-        int yminDragInner = rect.ymin + panelDraggableWidth; // Inner Top    (it)
-        int ymaxDragInner = rect.ymax - panelDraggableWidth; // Inner Bottom (ib)
+        int outerL = rect.xmin;
+        int outerR = rect.xmax;
+        int outerT = rect.ymin;
+        int outerB = rect.ymax;
 
-        bool mouseInRow = Between(xminDragOuter, mousex, xmaxDragOuter); // Mouse is within the horizontal bounds
-        bool mouseInCol = Between(yminDragOuter, mousey, ymaxDragOuter); // Mouse is within the vertical   bounds
+        int innerL = outerL + panelDraggableWidth;
+        int innerR = outerR - panelDraggableWidth;
+        int innerT = outerT + panelDraggableWidth;
+        int innerB = outerB - panelDraggableWidth;
 
-        bool mouseInLCol = mouseInCol && Between(xminDragOuter, mousex, xminDragInner); // Left
-        bool mouseInRCol = mouseInCol && Between(xmaxDragInner, mousex, xmaxDragOuter); // Right
-        bool mouseInTRow = mouseInRow && Between(yminDragOuter, mousey, yminDragInner); // Top
-        bool mouseInBRow = mouseInRow && Between(ymaxDragInner, mousey, ymaxDragOuter); // Bottom
+        bool inDraggableL = canDragL && outerL <= mousex && mousex <= innerL;
+        bool inDraggableR = canDragR && innerR <= mousex && mousex <= outerR;
+        bool inDraggableT = canDragT && outerT <= mousey && mousey <= innerT;
+        bool inDraggableB = canDragB && innerB <= mousey && mousey <= outerB;
 
-        bool inDraggableLCol = mouseInLCol && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL); // In left   edge and draggable
-        bool inDraggableRCol = mouseInRCol && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR); // In right  edge and draggable
-        bool inDraggableTRow = mouseInTRow && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT); // In top    edge and draggable
-        bool inDraggableBRow = mouseInBRow && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB); // In bottom edge and draggable
-
-        bool inDraggableTL = inDraggableLCol && inDraggableTRow; // In top    left  corner and both are draggable
-        bool inDraggableBR = inDraggableRCol && inDraggableBRow; // In bottom right corner and both are draggable
-        bool inDraggableTR = inDraggableTRow && inDraggableRCol; // In top    right corner and both are draggable
-        bool inDraggableBL = inDraggableBRow && inDraggableLCol; // In bottom left  corner and both are draggable
-
-        bool inRight  = inDraggableRCol; // In right (draggable)
-        bool inBottom = inDraggableBRow; // In bottom (draggable)
-
-        bool inRow = inDraggableTRow || inDraggableBRow; // In row (draggable)
-        bool inCol = inDraggableLCol || inDraggableRCol; // In column (draggable)
-
-        bool inCorner = inDraggableTL || inDraggableTR || inDraggableBR || inDraggableBL; // In corner (draggable)
-        bool inEdge   = inRow || inCol; // In edge (draggable)
-
-        bool inDraggable = inEdge; // In any edge or corner - corners are implied as they are the intersections of edges
-
-        if (!inDraggable)
+        // Left
+        if (inDraggableL)
         {
-            return PanelHover(); // Return that there are no hovers
+            Bounds bounds{};
+            bounds.xmin = outerL;
+            bounds.xmax = innerL;
+
+            // Top corner
+            if (inDraggableT)
+            {
+                bounds.ymin = outerT;
+                bounds.ymax = innerT;
+                return PanelHover(HoverSection::CornerTL, bounds);
+            }
+            // Bottom corner 
+            else if (inDraggableB)
+            {
+                bounds.ymin = innerB;
+                bounds.ymax = outerB;
+                return PanelHover(HoverSection::CornerBL, bounds);
+            }
+            // Edge
+            else
+            {
+                bounds.ymin = outerT;
+                bounds.ymax = outerB;
+                return PanelHover(HoverSection::EdgeL, bounds);
+            }
+        }
+        // Right
+        else if (inDraggableR)
+        {
+            Bounds bounds{};
+            bounds.xmin = outerR;
+            bounds.xmax = innerR;
+
+            // Top corner
+            if (inDraggableT)
+            {
+                bounds.ymin = outerT;
+                bounds.ymax = innerT;
+                return PanelHover(HoverSection::CornerTR, bounds);
+            }
+            // Bottom corner 
+            else if (inDraggableB)
+            {
+                bounds.ymin = innerB;
+                bounds.ymax = outerB;
+                return PanelHover(HoverSection::CornerBR, bounds);
+            }
+            // Edge
+            else
+            {
+                bounds.ymin = outerT;
+                bounds.ymax = outerB;
+                return PanelHover(HoverSection::EdgeR, bounds);
+            }
+        }
+        // Top or bottom
+        else if (inDraggableT || inDraggableB)
+        {
+            Bounds bounds{};
+            bounds.xmin = outerL;
+            bounds.xmax = outerR;
+
+            if (inDraggableT)
+            {
+                bounds.ymin = outerT;
+                bounds.ymax = innerT;
+                return PanelHover(HoverSection::EdgeT, bounds);
+            }
+            else if (inDraggableB)
+            {
+                bounds.ymin = innerB;
+                bounds.ymax = outerB;
+                return PanelHover(HoverSection::EdgeB, bounds);
+            }
         }
 
-        int x = inRight  ? xmaxDragInner : xminDragOuter; // Left corner of the hover element
-        int y = inBottom ? ymaxDragInner : yminDragOuter; // Top  corner of the hover element
-
-        int w = (inCorner || !inRow) ? (panelDraggableWidth) : (xmaxDragOuter - xminDragOuter); // Width  of the hover element
-        int h = (inCorner || !inCol) ? (panelDraggableWidth) : (ymaxDragOuter - yminDragOuter); // Height of the hover element
-
-        Bounds bounds{};
-        bounds.xmin = x;
-        bounds.ymin = y;
-        bounds.xmax = x + w;
-        bounds.ymax = y + h;
-
-        HoverSection section;
-        if (inCorner)
-        {
-            if (inDraggableTL)
-                section = HoverSection::CornerTL;
-            else if (inDraggableBR)
-                section = HoverSection::CornerBR;
-            else if (inDraggableTR)
-                section = HoverSection::CornerTR;
-            else // (inDraggableBL)
-                section = HoverSection::CornerBL;
-        }
-        else // (inEdge)
-        {
-            if (inDraggableLCol)
-                section = HoverSection::EdgeL;
-            else if (inDraggableRCol)
-                section = HoverSection::EdgeR;
-            else if (inDraggableTRow)
-                section = HoverSection::EdgeT;
-            else // (inDraggableBRow)
-                section = HoverSection::EdgeB;
-        }
-
-        return PanelHover(section, bounds);
+        return PanelHover();
     }
 
     void DrawPanel(const char* title, const Bounds& rect)
