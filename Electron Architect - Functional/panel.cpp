@@ -31,20 +31,26 @@ namespace panel
         *         ob
         */
 
-        bool canDragL = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL);
-        bool canDragR = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR);
-        bool canDragT = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT);
-        bool canDragB = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB);
-
         int outerL = rect.xmin;
         int outerR = rect.xmax;
         int outerT = rect.ymin;
         int outerB = rect.ymax;
 
+        if (mousex < outerL || outerR < mousex ||
+            mousey < outerT || outerB < mousey)
+        {
+            return PanelHover();
+        }
+
         int innerL = outerL + panelDraggableWidth;
         int innerR = outerR - panelDraggableWidth;
         int innerT = outerT + panelDraggableWidth;
         int innerB = outerB - panelDraggableWidth;
+
+        bool canDragL = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL);
+        bool canDragR = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR);
+        bool canDragT = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT);
+        bool canDragB = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB);
 
         bool inDraggableL = canDragL && outerL <= mousex && mousex <= innerL;
         bool inDraggableR = canDragR && innerR <= mousex && mousex <= outerR;
