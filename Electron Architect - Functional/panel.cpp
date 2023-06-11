@@ -13,11 +13,13 @@ namespace panel
     Color foreground = WHITE;
     Color draggableHighlight = YELLOW;
 
-    PanelHoverSection CheckPanelCollision(Bounds rect, DraggableEdges draggable, int mousex, int mousey)
+    PanelHover CheckPanelCollision(Bounds rect, DraggableEdges draggable, int mousex, int mousey)
     {
-        // No more is needed if there's no hover highlighting
-        if (!draggable.left && !draggable.top && !draggable.right && !draggable.bottom)
-            return;
+        // No hovers are allowed. Why did you even call this then?
+        if (draggable == DraggableEdges::None)
+        {
+            return PanelHover();
+        }
 
         /*
         *         ot
@@ -39,43 +41,80 @@ namespace panel
         int yminDragInner = rect.ymin + panelDraggableWidth; // Inner Top    (it)
         int ymaxDragInner = rect.ymax - panelDraggableWidth; // Inner Bottom (ib)
 
-        bool mouseInRow = (xminDragOuter <= mousex && mousex <= xmaxDragOuter); // Mouse is within the horizontal bounds
-        bool mouseInCol = (yminDragOuter <= mousey && mousey <= ymaxDragOuter); // Mouse is within the vertical   bounds
+        bool mouseInRow = Between(xminDragOuter, mousex, xmaxDragOuter); // Mouse is within the horizontal bounds
+        bool mouseInCol = Between(yminDragOuter, mousey, ymaxDragOuter); // Mouse is within the vertical   bounds
 
-        bool mouseInLCol = mouseInCol && (xminDragOuter <= mousex && mousex <= xminDragInner); // Left
-        bool mouseInRCol = mouseInCol && (xmaxDragInner <= mousex && mousex <= xmaxDragOuter); // Right
-        bool mouseInTRow = mouseInRow && (yminDragOuter <= mousey && mousey <= yminDragInner); // Top
-        bool mouseInBRow = mouseInRow && (ymaxDragInner <= mousey && mousey <= ymaxDragOuter); // Bottom
+        bool mouseInLCol = mouseInCol && Between(xminDragOuter, mousex, xminDragInner); // Left
+        bool mouseInRCol = mouseInCol && Between(xmaxDragInner, mousex, xmaxDragOuter); // Right
+        bool mouseInTRow = mouseInRow && Between(yminDragOuter, mousey, yminDragInner); // Top
+        bool mouseInBRow = mouseInRow && Between(ymaxDragInner, mousey, ymaxDragOuter); // Bottom
 
-        bool inDraggableLCol = mouseInLCol && draggable.left;   // In left   edge and draggable
-        bool inDraggableRCol = mouseInRCol && draggable.right;  // In right  edge and draggable
-        bool inDraggableTRow = mouseInTRow && draggable.top;    // In top    edge and draggable
-        bool inDraggableBRow = mouseInBRow && draggable.bottom; // In bottom edge and draggable
+        bool inDraggableLCol = mouseInLCol && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL); // In left   edge and draggable
+        bool inDraggableRCol = mouseInRCol && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR); // In right  edge and draggable
+        bool inDraggableTRow = mouseInTRow && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT); // In top    edge and draggable
+        bool inDraggableBRow = mouseInBRow && HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB); // In bottom edge and draggable
 
         bool inDraggableTL = inDraggableLCol && inDraggableTRow; // In top    left  corner and both are draggable
         bool inDraggableBR = inDraggableRCol && inDraggableBRow; // In bottom right corner and both are draggable
         bool inDraggableTR = inDraggableTRow && inDraggableRCol; // In top    right corner and both are draggable
         bool inDraggableBL = inDraggableBRow && inDraggableLCol; // In bottom left  corner and both are draggable
 
-        bool inRight  = inDraggableRCol; // In right
-        bool inBottom = inDraggableBRow; // In bottom
+        bool inRight  = inDraggableRCol; // In right (draggable)
+        bool inBottom = inDraggableBRow; // In bottom (draggable)
 
-        bool inRow = inDraggableTRow || inDraggableBRow; // In row
-        bool inCol = inDraggableLCol || inDraggableRCol; // In column
+        bool inRow = inDraggableTRow || inDraggableBRow; // In row (draggable)
+        bool inCol = inDraggableLCol || inDraggableRCol; // In column (draggable)
 
-        bool inCorner = inDraggableTL || inDraggableTR || inDraggableBR || inDraggableBL; // In corner
-        bool inEdge   = inRow || inCol; // In edge
+        bool inCorner = inDraggableTL || inDraggableTR || inDraggableBR || inDraggableBL; // In corner (draggable)
+        bool inEdge   = inRow || inCol; // In edge (draggable)
 
-        bool inDraggable = inEdge;
+        bool inDraggable = inEdge; // In any edge or corner - corners are implied as they are the intersections of edges
+
+        if (!inDraggable)
+        {
+            return PanelHover(); // Return that there are no hovers
+        }
 
         int x = inRight  ? xmaxDragInner : xminDragOuter; // Left corner of the hover element
         int y = inBottom ? ymaxDragInner : yminDragOuter; // Top  corner of the hover element
 
         int w = (inCorner || !inRow) ? (panelDraggableWidth) : (xmaxDragOuter - xminDragOuter); // Width  of the hover element
         int h = (inCorner || !inCol) ? (panelDraggableWidth) : (ymaxDragOuter - yminDragOuter); // Height of the hover element
+
+        Bounds bounds{};
+        bounds.xmin = x;
+        bounds.ymin = y;
+        bounds.xmax = x + w;
+        bounds.ymax = y + h;
+
+        HoverSection section;
+        if (inCorner)
+        {
+            if (inDraggableTL)
+                section = HoverSection::CornerTL;
+            else if (inDraggableBR)
+                section = HoverSection::CornerBR;
+            else if (inDraggableTR)
+                section = HoverSection::CornerTR;
+            else // (inDraggableBL)
+                section = HoverSection::CornerBL;
+        }
+        else // (inEdge)
+        {
+            if (inDraggableLCol)
+                section = HoverSection::EdgeL;
+            else if (inDraggableRCol)
+                section = HoverSection::EdgeR;
+            else if (inDraggableTRow)
+                section = HoverSection::EdgeT;
+            else // (inDraggableBRow)
+                section = HoverSection::EdgeB;
+        }
+
+        return PanelHover(section, bounds);
     }
 
-    void DrawPanel(const char* title, Bounds rect, PanelHoverSection hover)
+    void DrawPanel(const char* title, Bounds rect, PanelHover hover)
     {
         // Main panel
         DrawRectangle(rect.xmin, rect.ymin, rect.xmax - rect.xmin, rect.ymax - rect.ymin, accent);
@@ -87,19 +126,23 @@ namespace panel
         DrawRectangle(rect.xmin, rect.ymin, rect.xmax - rect.xmin, titleBarHeight, accent);
         DrawText(title, rect.xmin + titlePaddingX, rect.ymin + titlePaddingY, titleSize, foreground);
 
-        if (!!(int)hover)
+        if (hover)
         {
+            int x = hover.bounds.xmin;
+            int y = hover.bounds.ymin;
+            int w = hover.bounds.xmax - x;
+            int h = hover.bounds.ymax - y;
             DrawRectangle(x, y, w, h, draggableHighlight);
             int cursor = MOUSE_CURSOR_RESIZE_ALL;
-            if (inCorner)
+            if (HasHoverSectionFlag(hover, HoverSection::Corner))
             {
-                cursor = (hover == PanelHoverSection::CornerTL || hover == PanelHoverSection::CornerBR)
+                cursor = (hover == HoverSection::CornerTL || hover == HoverSection::CornerBR)
                     ? MOUSE_CURSOR_RESIZE_NWSE
                     : MOUSE_CURSOR_RESIZE_NESW;
             }
             else
             {
-                cursor = inRow ? MOUSE_CURSOR_RESIZE_NS : MOUSE_CURSOR_RESIZE_EW;
+                cursor = HasHoverSectionFlag(hover, HoverSection::EdgeRow) ? MOUSE_CURSOR_RESIZE_NS : MOUSE_CURSOR_RESIZE_EW;
             }
             SetMouseCursor(cursor);
         }

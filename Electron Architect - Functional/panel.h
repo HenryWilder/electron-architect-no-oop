@@ -15,11 +15,42 @@ namespace panel
     constexpr int titleSize = 16; // Size of title font
     constexpr int panelDraggableWidth = borderWidth; // Size of the draggable section of a panel edge in pixels (goes inward from edge)
 
-    struct Bounds { int xmin, ymin, xmax, ymax; };
-    struct DraggableEdges { bool left, top, right, bottom; };
+    // Panel bounds
+    struct Bounds
+    {
+        int xmin, ymin, xmax, ymax;
+    };
 
     // Uses bitflags
-    enum class PanelHoverSection
+    // Each bit is an independent boolean
+    enum class DraggableEdges
+    {
+        None = 0, // No edges are draggable
+
+        EdgeL = 1, // Left
+        EdgeR = 2, // Right
+        EdgeT = 4, // Top
+        EdgeB = 8, // Bottom
+
+        Horizontal = EdgeL | EdgeR, // Shorthand for the set of left/right edges - Can also be used as a mask
+        Vertical   = EdgeT | EdgeB, // Shorthand for the set of top/bottom edges - Can also be used as a mask
+
+        All = Horizontal | Vertical, // Shorthand for the set of all edges
+    };
+
+    inline DraggableEdges operator&(DraggableEdges lvalue, DraggableEdges rvalue)
+    {
+        return (DraggableEdges)((int)lvalue & (int)rvalue);
+    }
+
+    inline bool HasDraggableEdgeFlag(DraggableEdges value, DraggableEdges mask)
+    {
+        return (value & mask) == mask;
+    }
+
+    // Uses bitflags
+    // Flags are contextual to other flags
+    enum class HoverSection
     {
         // 0000 - There is not a hover
         // Behavior is undefined if any other flags are set while the "none" bit is set.
@@ -44,14 +75,6 @@ namespace panel
         // 3: Bottom
         _Edge = 3,
 
-        // __11 - Helper
-        // Use with & to get corner index in Z-order:
-        // 0: Top Left
-        // 1: Top Right
-        // 2: Bottom Left
-        // 3: Bottom Right
-        _Corner = 3,
-
         EdgeCol = Edge | 0, // 100_ - For edges - Hover contains vertical (left or right) edge
         EdgeRow = Edge | 2, // 101_ - For edges - Hover contains horizontal (top or bottom) edge
 
@@ -59,6 +82,14 @@ namespace panel
         EdgeR = EdgeCol | 1, // 1001 - Hover is right edge
         EdgeT = EdgeRow | 0, // 1010 - Hover is top edge
         EdgeB = EdgeRow | 1, // 1011 - Hover is bottom edge
+
+        // __11 - Helper
+        // Use with & to get corner index in Z-order:
+        // 0: Top Left
+        // 1: Top Right
+        // 2: Bottom Left
+        // 3: Bottom Right
+        _Corner = 3,
 
         CornerL = Corner | 0, // 11_0 - For corners - Hover contains left edge
         CornerR = Corner | 1, // 11_1 - For corners - Hover contains right edge
@@ -72,9 +103,48 @@ namespace panel
         CornerBR = Corner | CornerB | CornerR, // 1111 - Bottom right corner
     };
 
-    // Draws a panel with a title bar and optional highlighting for draggability
-    PanelHoverSection CheckPanelCollision(Bounds rect, DraggableEdges draggable, int mousex, int mousey);
+    inline HoverSection operator&(HoverSection lvalue, HoverSection rvalue)
+    {
+        return (HoverSection)((int)lvalue & (int)rvalue);
+    }
+
+    inline HoverSection operator|(HoverSection lvalue, HoverSection rvalue)
+    {
+        return (HoverSection)((int)lvalue | (int)rvalue);
+    }
+
+    inline HoverSection& operator|=(HoverSection& lvalue, HoverSection rvalue)
+    {
+        return (lvalue = (HoverSection)((int)lvalue | (int)rvalue));
+    }
+
+    inline bool HasHoverSectionFlag(HoverSection value, HoverSection mask)
+    {
+        return (value & mask) == mask;
+    }
+
+    struct PanelHover
+    {
+        PanelHover() : identity(HoverSection::None), bounds() {}
+        PanelHover(HoverSection identity, Bounds bounds) : identity(identity), bounds(bounds) {}
+
+        HoverSection identity;
+        Bounds bounds; // Will be garbage data if identity says there is no hover
+
+        inline operator HoverSection()
+        {
+            return identity;
+        }
+
+        inline operator bool()
+        {
+            return (bool)(identity & HoverSection::Any);
+        }
+    };
 
     // Draws a panel with a title bar and optional highlighting for draggability
-    void DrawPanel(const char* title, Bounds rect, PanelHoverSection hover = PanelHoverSection::None);
+    PanelHover CheckPanelCollision(Bounds rect, DraggableEdges draggable, int mousex, int mousey);
+
+    // Draws a panel with a title bar and optional highlighting for draggability
+    void DrawPanel(const char* title, Bounds rect, PanelHover hover = PanelHover());
 }

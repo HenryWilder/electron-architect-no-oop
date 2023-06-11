@@ -14,7 +14,7 @@ int main()
     *   Load textures, shaders, and meshes    *
     ******************************************/
 
-    struct { int xmin; int ymin; int xmax; int ymax; } panel = { 50, 50, 600, 200 };
+    panel::Bounds testPanel = { 50, 50, 600, 200 };
 
     while (!WindowShouldClose())
     {
@@ -22,7 +22,7 @@ int main()
         *   Simulate frame and update variables   *
         ******************************************/
 
-        // @TODO: simulate frame
+        panel::PanelHover testPanelHover = panel::CheckPanelCollision(testPanel, panel::DraggableEdges::All, GetMouseX(), GetMouseY());
 
         /******************************************
         *   Draw the frame                        *
@@ -34,7 +34,7 @@ int main()
 
             SetMouseCursor(MouseCursor::MOUSE_CURSOR_DEFAULT);
 
-            panel::DrawPanel("Panel", panel.xmin, panel.ymin, panel.xmax, panel.ymax, true, true, true, true, GetMouseX(), GetMouseY());
+            panel::DrawPanel("Panel", testPanel, testPanelHover);
 
         } EndDrawing();
     }
