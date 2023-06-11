@@ -15,88 +15,67 @@ namespace panel
 
     PanelHover CheckPanelCollision(const Bounds& rect, DraggableEdges draggable, int mousex, int mousey)
     {
-        // No hovers are allowed. Why did you even call this then?
-        if (draggable == DraggableEdges::None)
-        {
-            return PanelHover();
-        }
+        PanelHover result = PanelHover();
 
-        /*
-        *         ot
-        *     .========.
-        *    ||   it   ||
-        * ol ||il    ir|| or
-        *    ||   ib   ||
-        *     '========'
-        *         ob
-        */
+        // Return if no hovers are allowed. Why did you even call this, then?
+        if (draggable == DraggableEdges::None) return result;
 
-        int outerL = rect.xmin;
-        int outerR = rect.xmax;
-        int outerT = rect.ymin;
-        int outerB = rect.ymax;
+        int outerL{ rect.xmin }, outerR{ rect.xmax },
+            outerT{ rect.ymin }, outerB{ rect.ymax };
 
-        if (mousex < outerL || outerR < mousex ||
-            mousey < outerT || outerB < mousey)
-        {
-            return PanelHover();
-        }
+        bool outOfBounds =
+            mousex < outerL || outerR < mousex ||
+            mousey < outerT || outerB < mousey;
 
-        int innerL = outerL + panelDraggableWidth;
-        int innerR = outerR - panelDraggableWidth;
-        int innerT = outerT + panelDraggableWidth;
-        int innerB = outerB - panelDraggableWidth;
+        // Return if mouse is outside the panel
+        if (outOfBounds) return result;
 
-        bool canDragL = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL);
-        bool canDragR = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR);
-        bool canDragT = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT);
-        bool canDragB = HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB);
+        int innerL{ outerL + panelDraggableWidth }, innerR{ outerR - panelDraggableWidth },
+            innerT{ outerT + panelDraggableWidth }, innerB{ outerB - panelDraggableWidth };
 
-        bool inDraggableL = canDragL && outerL <= mousex && mousex <= innerL;
-        bool inDraggableR = canDragR && innerR <= mousex && mousex <= outerR;
-        bool inDraggableT = canDragT && outerT <= mousey && mousey <= innerT;
-        bool inDraggableB = canDragB && innerB <= mousey && mousey <= outerB;
+        bool canDragL{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeL) }, canDragR{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeR) },
+             canDragT{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeT) }, canDragB{ HasDraggableEdgeFlag(draggable, DraggableEdges::EdgeB) };
 
-        bool touchesDraggableL = inDraggableL || inDraggableT || inDraggableB;
-        bool touchesDraggableR = inDraggableR || inDraggableT || inDraggableB;
+        bool inDraggableL{ canDragL && outerL <= mousex && mousex <= innerL }, inDraggableR{ canDragR && innerR <= mousex && mousex <= outerR },
+             inDraggableT{ canDragT && outerT <= mousey && mousey <= innerT }, inDraggableB{ canDragB && innerB <= mousey && mousey <= outerB };
 
-        HoverSection identity = HoverSection::None;
-        Bounds bounds{};
-        bounds.xmin = touchesDraggableL ? outerL : innerR;
-        bounds.xmax = touchesDraggableR ? outerR : innerL;
-        bounds.ymin = inDraggableB ? innerB : outerT;
-        bounds.ymax = inDraggableT ? innerT : outerB;
+        bool inDraggableRow{ inDraggableT || inDraggableB };
+
+        bool touchesDraggableL{ inDraggableL || inDraggableRow },
+             touchesDraggableR{ inDraggableR || inDraggableRow };
 
         // Left
         if (inDraggableL)
         {
-            if (inDraggableT)
-                identity = HoverSection::CornerTL;
-            else if (inDraggableB)
-                identity = HoverSection::CornerBL;
-            else
-                identity = HoverSection::EdgeL;
+                 if (inDraggableT) result.identity = HoverSection::CornerTL;
+            else if (inDraggableB) result.identity = HoverSection::CornerBL;
+            else                   result.identity = HoverSection::EdgeL;
         }
         // Right
         else if (inDraggableR)
         {
-            if (inDraggableT)
-                identity = HoverSection::CornerTR;
-            else if (inDraggableB)
-                identity = HoverSection::CornerBR;
-            else
-                identity = HoverSection::EdgeR;
+                 if (inDraggableT) result.identity = HoverSection::CornerTR;
+            else if (inDraggableB) result.identity = HoverSection::CornerBR;
+            else                   result.identity = HoverSection::EdgeR;
         }
-        // Top or bottom
-        else if (inDraggableT || inDraggableB)
+        // Top or bottom - but NOT left nor right
+        else if (inDraggableRow)
         {
-            if (inDraggableT)
-                identity = HoverSection::EdgeT;
-            else // (inDraggableB)
-                identity = HoverSection::EdgeB;
+                 if (inDraggableT) result.identity = HoverSection::EdgeT;
+            else if (inDraggableB) result.identity = HoverSection::EdgeB;
+            // inDraggableB is implied by inDraggableRow, but I still want it to be explicit.
+            // The compiler *should* optimize the redundant "if" away. Probably.
         }
 
-        return PanelHover(identity, bounds);
+        // Return if none were satisfied
+        if (result.identity == HoverSection::None) return PanelHover();
+
+        result.bounds.xmin = touchesDraggableL ? outerL : innerR;
+        result.bounds.xmax = touchesDraggableR ? outerR : innerL;
+        result.bounds.ymin = inDraggableB ? innerB : outerT;
+        result.bounds.ymax = inDraggableT ? innerT : outerB;
+
+        return result;
     }
 
     void DrawPanel(const char* title, const Bounds& rect)
