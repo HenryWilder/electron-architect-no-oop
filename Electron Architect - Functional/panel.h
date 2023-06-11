@@ -89,7 +89,7 @@ namespace panel
         }
     };
 
-    // Panel bounds - Useable for non-referencing bounds
+    // Panel bounds - Useable for both referencing and non-referencing bounds
     struct Bounds
     {
         IntOrIntPtr xmin, ymin, xmax, ymax;
