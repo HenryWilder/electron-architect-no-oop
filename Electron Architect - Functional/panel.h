@@ -72,6 +72,10 @@ namespace panel
         Edge   = Any | 0, // 10__ - Hover is exactly one edge
         Corner = Any | 4, // 11__ - Hover is a combination of exactly two edges
 
+        // _1__ - Helper
+        // Use with & and Edge or Corner to test which one the hover is
+        _Type = 4,
+
         // __11 - Helper
         // Use with & to get edge index:
         // 0: Left
@@ -83,7 +87,9 @@ namespace panel
         EdgeCol = Edge | 0, // 100_ - For edges - Hover contains vertical (left or right) edge
         EdgeRow = Edge | 2, // 101_ - For edges - Hover contains horizontal (top or bottom) edge
 
-        // ! This isn't gonna work because masking with a 0 will make it 0 anyway. Find an alternative!
+        // __1_ - Helper
+        // Use with & and EdgeCol or EdgeRow to test whether hover is on a row or column
+        _EdgeRowOrCol = 2,
 
         EdgeL = EdgeCol | 0, // 1000 - Hover is left edge
         EdgeR = EdgeCol | 1, // 1001 - Hover is right edge
