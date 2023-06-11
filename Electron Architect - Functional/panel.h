@@ -58,7 +58,7 @@ namespace panel
     enum class HoverSection
     {
         // 0000 - There is not a hover
-        // Behavior is undefined if any other flags are set while the "none" bit is set.
+        // Behavior is undefined if any other flags are set while the "none" bit (0___) is set.
         None = 0,
 
         // 1___ - There is a hover
