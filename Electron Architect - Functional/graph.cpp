@@ -15,4 +15,9 @@ namespace graph
 		},
 		(panel::DraggableEdges)((int)panel::DraggableEdges::EdgeB | (int)panel::DraggableEdges::EdgeR)
 	};
+
+	void DrawPanelContents()
+	{
+
+	}
 }

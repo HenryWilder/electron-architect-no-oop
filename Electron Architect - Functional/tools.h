@@ -5,4 +5,5 @@
 namespace tools
 {
 	extern panel::Panel toolsPanel;
+	void DrawPanelContents();
 }

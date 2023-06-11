@@ -13,4 +13,9 @@ namespace tools
 		},
 		panel::DraggableEdges::None
 	};
+
+	void DrawPanelContents()
+	{
+
+	}
 }

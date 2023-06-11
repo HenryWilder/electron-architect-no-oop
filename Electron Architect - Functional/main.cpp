@@ -118,6 +118,23 @@ int main()
         for (panel::Panel* currentPanel : panels)
         {
             panel::DrawPanel(currentPanel);
+            
+            if (currentPanel == &console::consolePanel)
+            {
+                console::DrawPanelContents();
+            }
+            else if (currentPanel == &properties::propertiesPanel)
+            {
+                properties::DrawPanelContents();
+            }
+            else if (currentPanel == &graph::graphPanel)
+            {
+                graph::DrawPanelContents();
+            }
+            else if (currentPanel == &tools::toolsPanel)
+            {
+                tools::DrawPanelContents();
+            }
         }
 
         if (currentlyDragging)

@@ -13,4 +13,9 @@ namespace properties
 		},
 		(panel::DraggableEdges)((int)panel::DraggableEdges::EdgeL | (int)panel::DraggableEdges::EdgeB)
 	};
+
+	void DrawPanelContents()
+	{
+
+	}
 }

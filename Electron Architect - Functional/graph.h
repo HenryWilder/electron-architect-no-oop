@@ -5,4 +5,5 @@
 namespace graph
 {
 	extern panel::Panel graphPanel;
+	void DrawPanelContents();
 }

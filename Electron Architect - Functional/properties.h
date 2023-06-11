@@ -5,4 +5,5 @@
 namespace properties
 {
 	extern panel::Panel propertiesPanel;
+	void DrawPanelContents();
 }
