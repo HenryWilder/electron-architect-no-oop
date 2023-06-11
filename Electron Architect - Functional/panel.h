@@ -150,11 +150,11 @@ namespace panel
     };
 
     // Checks whether the mouse is hovering a draggable part of the panel
-    PanelHover CheckPanelCollision(Bounds rect, DraggableEdges draggable, int mousex, int mousey);
+    PanelHover CheckPanelCollision(const Bounds& rect, DraggableEdges draggable, int mousex, int mousey);
 
     // Draws a panel with a title bar
-    void DrawPanel(const char* title, Bounds rect);
+    void DrawPanel(const char* title, const Bounds& rect);
 
     // Draws the dragging element for a panel
-    void DrawPanelDragElement(Bounds rect, PanelHover hover);
+    void DrawPanelDragElement(Bounds rect, const PanelHover& hover);
 }

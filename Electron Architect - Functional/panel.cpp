@@ -13,7 +13,7 @@ namespace panel
     Color foreground = WHITE;
     Color draggableHighlight = YELLOW;
 
-    PanelHover CheckPanelCollision(Bounds rect, DraggableEdges draggable, int mousex, int mousey)
+    PanelHover CheckPanelCollision(const Bounds& rect, DraggableEdges draggable, int mousex, int mousey)
     {
         // No hovers are allowed. Why did you even call this then?
         if (draggable == DraggableEdges::None)
@@ -114,7 +114,7 @@ namespace panel
         return PanelHover(section, bounds);
     }
 
-    void DrawPanel(const char* title, Bounds rect)
+    void DrawPanel(const char* title, const Bounds& rect)
     {
         // Main panel
         DrawRectangle(rect.xmin, rect.ymin, rect.xmax - rect.xmin, rect.ymax - rect.ymin, accent);
@@ -127,7 +127,7 @@ namespace panel
         DrawText(title, rect.xmin + titlePaddingX, rect.ymin + titlePaddingY, titleSize, foreground);
     }
 
-    void DrawPanelDragElement(Bounds rect, PanelHover hover)
+    void DrawPanelDragElement(Bounds rect, const PanelHover& hover)
     {
         if (hover)
         {
