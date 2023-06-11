@@ -83,6 +83,8 @@ namespace panel
         EdgeCol = Edge | 0, // 100_ - For edges - Hover contains vertical (left or right) edge
         EdgeRow = Edge | 2, // 101_ - For edges - Hover contains horizontal (top or bottom) edge
 
+        // ! This isn't gonna work because masking with a 0 will make it 0 anyway. Find an alternative!
+
         EdgeL = EdgeCol | 0, // 1000 - Hover is left edge
         EdgeR = EdgeCol | 1, // 1001 - Hover is right edge
         EdgeT = EdgeRow | 0, // 1010 - Hover is top edge
