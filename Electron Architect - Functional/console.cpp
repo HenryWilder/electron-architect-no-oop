@@ -2,5 +2,5 @@
 
 namespace console
 {
-	panel::Panel consolePanel = { "Console", { 0, 500, 1280, 720 }, panel::DraggableEdges::EdgeT };
+	panel::Panel consolePanel = { "Console", { panel::windowBounds.xmin, 500, 1280, 720 }, panel::DraggableEdges::EdgeT };
 }

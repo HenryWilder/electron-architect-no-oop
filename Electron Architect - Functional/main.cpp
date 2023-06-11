@@ -10,7 +10,7 @@ int main()
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
-    panel::Panel* panels[] = { &console::console };
+    panel::Panel* panels[] = { &console::consolePanel };
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
     auto shiftToFront = [&panels](panel::Panel* panel) {

@@ -26,12 +26,20 @@ namespace panel
         IntOrIntPtr()
             : tag{ Tag::Val }, ref{ } { }
 
-        IntOrIntPtr(int  x)
+        IntOrIntPtr(int x)
             : tag{ Tag::Val }, ref{ } { val = x; }
+
+        // Constructs from value
+        IntOrIntPtr(const IntOrIntPtr& x)
+            : tag{ Tag::Val }, ref{ } { val = (int)x; }
 
         IntOrIntPtr(int *x)
             : tag{ Tag::Ref }, ref{ x } { }
 
+        // Constructs from reference
+        IntOrIntPtr(IntOrIntPtr* x)
+            : tag{ Tag::Ref }, ref{ } { SetRef(x); }
+        
         enum class Tag { Val, Ref } tag;
 
         union { int val; int *ref; };
@@ -57,7 +65,7 @@ namespace panel
         }
 
         // Sets the value
-        inline IntOrIntPtr& operator=(int newVal)
+        inline IntOrIntPtr& operator=(const int newVal)
         {
             if (IsRef())
                 *ref = newVal;
@@ -67,10 +75,17 @@ namespace panel
         }
 
         // Sets the value to match - Use SetRef to replace the reference
-        inline IntOrIntPtr& operator=(IntOrIntPtr newVal)
+        inline IntOrIntPtr& operator=(const IntOrIntPtr newVal)
         {
             int _newVal = (int)newVal;
             return *this = _newVal;
+        }
+
+        // Sets the reference to match
+        inline IntOrIntPtr& operator=(IntOrIntPtr* newVal)
+        {
+            SetRef(newVal);
+            return *this;
         }
     };
 
@@ -81,7 +96,7 @@ namespace panel
     };
 
     // Can be referenced to keep RefBounds synced with window
-    Bounds windowBounds =  { };
+    extern Bounds windowBounds;
     
     // Uses bitflags
     // Each bit is an independent boolean

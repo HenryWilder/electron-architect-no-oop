@@ -7,6 +7,8 @@ namespace panel
     Color foreground = WHITE;
     Color draggableHighlight = YELLOW;
 
+    Bounds windowBounds = { 0, 0, 1280, 720 };
+
     PanelHover CheckPanelCollision(const Bounds& rect, DraggableEdges draggable, int mousex, int mousey)
     {
         PanelHover result = PanelHover();
