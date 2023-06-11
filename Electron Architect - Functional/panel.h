@@ -131,10 +131,6 @@ namespace panel
         HoverSection identity;
         Bounds bounds; // Bounds of specifically the hover element - Will be garbage data if identity says there is no hover
 
-        // Sets the position of the relevant element
-        // This is contextual to the identity
-        void SetPos(int newPos);
-
         inline operator HoverSection() const
         {
             return identity;

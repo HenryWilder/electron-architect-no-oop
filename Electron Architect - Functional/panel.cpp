@@ -152,24 +152,4 @@ namespace panel
             SetMouseCursor(cursor);
         }
     }
-
-    void PanelHover::SetPos(int newPos)
-    {
-        int x = bounds.xmin;
-        int y = bounds.ymin;
-        int w = bounds.xmax - bounds.xmin;
-        int h = bounds.ymax - bounds.ymin;
-
-        switch (identity)
-        {
-        case HoverSection::EdgeL: bounds.xmax = (bounds.xmin = newPos) + w; break;
-        case HoverSection::EdgeR: bounds.xmin = (bounds.xmax = newPos) - w; break;
-        case HoverSection::EdgeT: bounds.ymax = (bounds.ymin = newPos) + h; break;
-        case HoverSection::EdgeB: bounds.ymin = (bounds.ymax = newPos) - h; break;
-        case HoverSection::CornerTL: break;
-        case HoverSection::CornerTR: break;
-        case HoverSection::CornerBL: break;
-        case HoverSection::CornerBR: break;
-        }
-    }
 }
