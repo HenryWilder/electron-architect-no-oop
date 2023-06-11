@@ -1,5 +1,7 @@
 #include <raylib.h>
 #include <raymath.h>
+#include "panel.h"
+#include "console.h"
 
 int main()
 {
@@ -30,7 +32,7 @@ int main()
 
             ClearBackground(BLACK);
 
-            // TODO: Draw frame
+            
 
         } EndDrawing();
     }

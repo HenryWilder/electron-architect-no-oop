@@ -177,6 +177,7 @@
     <ClCompile Include="console.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="input.cpp" />
+    <ClCompile Include="panel.cpp" />
     <ClCompile Include="properties.cpp" />
     <ClCompile Include="serialize.cpp" />
     <ClCompile Include="settings.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="console.h" />
     <ClInclude Include="graph.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="panel.h" />
     <ClInclude Include="properties.h" />
     <ClInclude Include="serialize.h" />
     <ClInclude Include="settings.h" />
