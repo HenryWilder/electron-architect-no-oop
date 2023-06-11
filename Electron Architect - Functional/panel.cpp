@@ -57,86 +57,46 @@ namespace panel
         bool inDraggableT = canDragT && outerT <= mousey && mousey <= innerT;
         bool inDraggableB = canDragB && innerB <= mousey && mousey <= outerB;
 
+        bool touchesDraggableL = inDraggableL || inDraggableT || inDraggableB;
+        bool touchesDraggableR = inDraggableR || inDraggableT || inDraggableB;
+
+        HoverSection identity = HoverSection::None;
+        Bounds bounds{};
+        bounds.xmin = touchesDraggableL ? outerL : innerR;
+        bounds.xmax = touchesDraggableR ? outerR : innerL;
+        bounds.ymin = inDraggableB ? innerB : outerT;
+        bounds.ymax = inDraggableT ? innerT : outerB;
+
         // Left
         if (inDraggableL)
         {
-            Bounds bounds{};
-            bounds.xmin = outerL;
-            bounds.xmax = innerL;
-
-            // Top corner
             if (inDraggableT)
-            {
-                bounds.ymin = outerT;
-                bounds.ymax = innerT;
-                return PanelHover(HoverSection::CornerTL, bounds);
-            }
-            // Bottom corner 
+                identity = HoverSection::CornerTL;
             else if (inDraggableB)
-            {
-                bounds.ymin = innerB;
-                bounds.ymax = outerB;
-                return PanelHover(HoverSection::CornerBL, bounds);
-            }
-            // Edge
+                identity = HoverSection::CornerBL;
             else
-            {
-                bounds.ymin = outerT;
-                bounds.ymax = outerB;
-                return PanelHover(HoverSection::EdgeL, bounds);
-            }
+                identity = HoverSection::EdgeL;
         }
         // Right
         else if (inDraggableR)
         {
-            Bounds bounds{};
-            bounds.xmin = outerR;
-            bounds.xmax = innerR;
-
-            // Top corner
             if (inDraggableT)
-            {
-                bounds.ymin = outerT;
-                bounds.ymax = innerT;
-                return PanelHover(HoverSection::CornerTR, bounds);
-            }
-            // Bottom corner 
+                identity = HoverSection::CornerTR;
             else if (inDraggableB)
-            {
-                bounds.ymin = innerB;
-                bounds.ymax = outerB;
-                return PanelHover(HoverSection::CornerBR, bounds);
-            }
-            // Edge
+                identity = HoverSection::CornerBR;
             else
-            {
-                bounds.ymin = outerT;
-                bounds.ymax = outerB;
-                return PanelHover(HoverSection::EdgeR, bounds);
-            }
+                identity = HoverSection::EdgeR;
         }
         // Top or bottom
         else if (inDraggableT || inDraggableB)
         {
-            Bounds bounds{};
-            bounds.xmin = outerL;
-            bounds.xmax = outerR;
-
             if (inDraggableT)
-            {
-                bounds.ymin = outerT;
-                bounds.ymax = innerT;
-                return PanelHover(HoverSection::EdgeT, bounds);
-            }
+                identity = HoverSection::EdgeT;
             else // (inDraggableB)
-            {
-                bounds.ymin = innerB;
-                bounds.ymax = outerB;
-                return PanelHover(HoverSection::EdgeB, bounds);
-            }
+                identity = HoverSection::EdgeB;
         }
 
-        return PanelHover();
+        return PanelHover(identity, bounds);
     }
 
     void DrawPanel(const char* title, const Bounds& rect)
