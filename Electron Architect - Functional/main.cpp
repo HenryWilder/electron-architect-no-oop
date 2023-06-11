@@ -7,6 +7,9 @@ int main()
 {
     int windowWidth = 1280;
     int windowHeight = 720;
+    panel::windowBounds.xmax = &windowWidth;
+    panel::windowBounds.ymax = &windowHeight;
+
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
