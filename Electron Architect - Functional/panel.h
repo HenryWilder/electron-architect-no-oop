@@ -13,7 +13,12 @@ namespace panel
     constexpr int titlePaddingY = 4; // Vertical padding of standard panel title in pixels
     constexpr int borderWidth = 4; // Width of standard panel border in pixels
     constexpr int titleSize = 16; // Size of title font
-    constexpr int panelDraggableWidth = borderWidth; // Size of the draggable section of a panel edge in pixels (goes inward from edge)
+    constexpr int panelDraggableWidth = 6; // Size of the draggable section of a panel edge in pixels (goes inward from edge)
+
+    constexpr int panelTitlebarHeight = titlePaddingY * 2 + titleSize; // The height of the titlebar section of a panel
+
+    constexpr int minWidth= 60; // Minimum width of a standard panel in pixels
+    constexpr int minHeight = 30; // Minimum height of a standard panel in pixels
 
     // Panel bounds
     struct Bounds

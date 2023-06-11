@@ -3,6 +3,16 @@
 #include "panel.h"
 #include "console.h"
 
+int Min(int a, int b)
+{
+    return b < a ? b : a;
+}
+
+int Max(int a, int b)
+{
+    return b > a ? b : a;
+}
+
 int main()
 {
     int windowWidth = 1280;
@@ -55,22 +65,26 @@ int main()
             // Left
             if (draggingLeft)
             {
-                draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->xmin = GetMouseX()) + panel::panelDraggableWidth;
+                int x = Min(GetMouseX(), currentlyDragging->xmax - panel::minWidth);
+                draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->xmin = x) + panel::panelDraggableWidth;
             }
             // Right
             else if (draggingRight)
             {
-                draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->xmax = GetMouseX()) - panel::panelDraggableWidth;
+                int x = Max(GetMouseX(), currentlyDragging->xmin + panel::minWidth);
+                draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->xmax = x) - panel::panelDraggableWidth;
             }
             // Top
             if (draggingTop)
             {
-                draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->ymin = GetMouseY()) + panel::panelDraggableWidth;
+                int y = Min(GetMouseY(), currentlyDragging->ymax - panel::minHeight);
+                draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->ymin = y) + panel::panelDraggableWidth;
             }
             // Bottom
             else if (draggingBottom)
             {
-                draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->ymax = GetMouseY()) - panel::panelDraggableWidth;
+                int y = Max(GetMouseY(), currentlyDragging->ymin + panel::minHeight);
+                draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->ymax = y) - panel::panelDraggableWidth;
             }
         }
         else
