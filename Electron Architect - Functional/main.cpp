@@ -2,6 +2,7 @@
 #include <raymath.h>
 #include "panel.h"
 #include "console.h"
+#include "properties.h"
 
 int main()
 {
@@ -13,7 +14,7 @@ int main()
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
-    panel::Panel* panels[] = { &console::consolePanel };
+    panel::Panel* panels[] = { &console::consolePanel, &properties::propertiesPanel };
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
     auto shiftToFront = [&panels](panel::Panel* panel) {
