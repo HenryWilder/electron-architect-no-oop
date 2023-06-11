@@ -7,7 +7,7 @@ int main()
 {
     int windowWidth = 1280;
     int windowHeight = 720;
-    InitWindow(windowWidth, windowHeight, "My Raylib Program");
+    InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
     /******************************************
@@ -30,6 +30,20 @@ int main()
         if (currentlyDragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
             currentlyDragging = nullptr;
+        }
+
+        if (!currentlyDragging && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            for (panel::Panel* currentPanel : panels)
+            {
+                panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, panel::DraggableEdges::All, GetMouseX(), GetMouseY());
+                if (panelHover)
+                {
+                    currentlyDragging = currentPanel;
+                    draggingInfo = panelHover;
+                    break;
+                }
+            }
         }
 
         if (currentlyDragging)
@@ -57,22 +71,6 @@ int main()
             {
                 int y = Clamp(GetMouseY(), currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
                 draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->bounds.ymax = y) - panel::panelDraggableWidth;
-            }
-        }
-        else
-        {
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-            {
-                for (panel::Panel* currentPanel : panels)
-                {
-                    panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, panel::DraggableEdges::All, GetMouseX(), GetMouseY());
-                    if (panelHover)
-                    {
-                        currentlyDragging = currentPanel;
-                        draggingInfo = panelHover;
-                        break;
-                    }
-                }
             }
         }
 
