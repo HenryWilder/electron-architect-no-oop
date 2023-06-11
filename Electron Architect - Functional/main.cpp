@@ -14,6 +14,26 @@ int main()
     panel::Panel testPanel2 = { "Panel 2", { 100, 250, 300, 500 }};
     panel::Panel* panels[] = { &testPanel1, &testPanel2 };
 
+    // Moves the specified panel to the front of the draw order - which is the back of the array.
+    auto shiftToFront = [&panels](panel::Panel* panel) {
+        constexpr size_t numPanels = sizeof(panels) / sizeof(panel::Panel*);
+        size_t i = 0;
+        // Locate panel
+        for (; i < numPanels; ++i)
+        {
+            if (panels[i] == panel)
+            {
+                break;
+            }
+        }
+        // Shift following panels
+        for (++i; i < numPanels; ++i)
+        {
+            panels[i - 1] = panels[i];
+        }
+        panels[numPanels - 1] = panel;
+    };
+
     panel::Panel* currentlyDragging = nullptr;
     panel::PanelHover draggingInfo = panel::PanelHover();
 
@@ -46,6 +66,8 @@ int main()
                     int yBound = panel::HasTop (panelHover.identity) ? currentPanel->bounds.ymin : currentPanel->bounds.ymax;
                     mouseOffsX = xBound - mouseCurrX;
                     mouseOffsY = yBound - mouseCurrY;
+
+                    shiftToFront(currentPanel);
 
                     break;
                 }
@@ -80,23 +102,21 @@ int main()
             }
         }
 
-        BeginDrawing(); {
+        BeginDrawing();
 
-            ClearBackground(BLACK);
+        ClearBackground(BLACK);
 
-            SetMouseCursor(MouseCursor::MOUSE_CURSOR_DEFAULT);
+        for (panel::Panel* currentPanel : panels)
+        {
+            panel::DrawPanel(currentPanel);
+        }
 
-            for (panel::Panel* currentPanel : panels)
-            {
-                panel::DrawPanel(currentPanel);
-            }
+        if (currentlyDragging)
+        {
+            panel::DrawPanelDragElement(currentlyDragging->bounds, draggingInfo);
+        }
 
-            if (currentlyDragging)
-            {
-                panel::DrawPanelDragElement(currentlyDragging->bounds, draggingInfo);
-            }
-
-        } EndDrawing();
+        EndDrawing();
 
         mousePrevX = mouseCurrX;
         mousePrevY = mouseCurrY;
