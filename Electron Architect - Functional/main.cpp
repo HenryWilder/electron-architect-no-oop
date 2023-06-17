@@ -23,6 +23,15 @@ int main()
         &graph::graphPanel
     };
 
+    console::Log("Test log 1");
+    console::Warn("Test warning 1");
+    console::Warn("Test error 1");
+    console::Group("Test group 1");
+    console::Log("Test log 2");
+    console::Warn("Test warning 2");
+    console::Warn("Test error 2");
+    console::GroupEnd();
+
     // Moves the specified panel to the front of the draw order - which is the back of the array.
     auto shiftToFront = [&panels](panel::Panel* panel) {
         constexpr size_t numPanels = sizeof(panels) / sizeof(panel::Panel*);
