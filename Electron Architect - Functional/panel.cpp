@@ -94,11 +94,47 @@ namespace panel
     }
 
     void DrawPanelTitlebar(const Panel* panel)
-    {        
+    {
+        Bounds rect = panel->bounds;
+        int x{ rect.xmin },
+            y{ rect.ymin };
+        int w{ rect.xmax - x },
+            h{ rect.ymax - y };
+
         // Title section
         constexpr int titleBarHeight = titlePaddingY * 2 + titleSize;
-        DrawRectangle(panel->bounds.xmin, panel->bounds.ymin, panel->bounds.xmax - panel->bounds.xmin, titleBarHeight, accent);
-        DrawText(panel->title, panel->bounds.xmin + titlePaddingX, panel->bounds.ymin + titlePaddingY, titleSize, foreground);
+        DrawRectangle(x, y, w, titleBarHeight, accent);
+        DrawText(panel->title, x + titlePaddingX, y + titlePaddingY, titleSize, foreground);
+
+        // Shadow
+        BeginPanelScissor(panel);
+        BeginBlendMode(BLEND_MULTIPLIED);
+
+        const Color transparent = { 0,0,0, 0 };
+        const Color mainShadow = { 0,0,0, 64 };
+        const Color ambiShadow = { 0,0,0, 32 };
+
+        int mainShadowSize{ 4 },
+            ambiShadowSize{ 16 };
+
+        // Top
+        DrawRectangleGradientV(x, y + titleBarHeight, w, ambiShadowSize, ambiShadow, transparent);
+        DrawRectangleGradientV(x, y + titleBarHeight, w, mainShadowSize, mainShadow, transparent);
+
+        // Bottom
+        DrawRectangleGradientV(x, y + h - ambiShadowSize, w, ambiShadowSize, transparent, ambiShadow);
+        DrawRectangleGradientV(x, y + h - mainShadowSize, w, mainShadowSize, transparent, mainShadow);
+
+        // Left
+        DrawRectangleGradientH(x, y + titleBarHeight, ambiShadowSize, h, ambiShadow, transparent);
+        DrawRectangleGradientH(x, y + titleBarHeight, mainShadowSize, h, mainShadow, transparent);
+
+        // Right
+        DrawRectangleGradientH(x + w - ambiShadowSize, y + titleBarHeight, ambiShadowSize, h, transparent, ambiShadow);
+        DrawRectangleGradientH(x + w - mainShadowSize, y + titleBarHeight, mainShadowSize, h, transparent, mainShadow);
+
+        EndBlendMode();
+        EndPanelScissor();
     }
 
     void DrawPanelDragElement(Bounds rect, const PanelHover& hover)
