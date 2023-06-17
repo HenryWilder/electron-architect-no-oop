@@ -93,13 +93,15 @@ namespace panel
         DrawRectangle(x + borderWidth, y + borderWidth, w - borderInset, h - borderInset, background);
     }
 
-    void DrawPanelTitlebar(const Panel* panel)
+    void DrawPanelForeground(const Panel* panel)
     {
         Bounds rect = panel->bounds;
         int x{ rect.xmin },
             y{ rect.ymin };
         int w{ rect.xmax - x },
             h{ rect.ymax - y };
+
+        BeginScissorMode(x, y, w, h);
 
         // Shadow
         if (BeginPanelScissor(panel))
@@ -135,6 +137,8 @@ namespace panel
         // Title section
         DrawRectangle(x, y, w, panelTitlebarHeight, accent);
         DrawText(panel->title, x + titlePaddingX, y + titlePaddingY, titleSize, foreground);
+
+        EndScissorMode();
     }
 
     void DrawPanelDragElement(Bounds rect, const PanelHover& hover)

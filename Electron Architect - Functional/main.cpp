@@ -153,7 +153,7 @@ int main()
 
             } panel::EndPanelScissor();
 
-            panel::DrawPanelTitlebar(currentPanel);
+            panel::DrawPanelForeground(currentPanel);
         }
 
         if (currentlyDragging)

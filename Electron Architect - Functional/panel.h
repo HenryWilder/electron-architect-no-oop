@@ -243,7 +243,7 @@ namespace panel
     void DrawPanelBackground(const Panel* panel);
 
     // Draws a panel's title bar
-    void DrawPanelTitlebar(const Panel* panel);
+    void DrawPanelForeground(const Panel* panel);
 
     // Creates a scissor so that whatever renders until the end scissor is only shown within the panel's borders.
     // Returns true on success, returns false on failure. If false, don't even bother drawing the panel contents.
