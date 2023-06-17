@@ -118,7 +118,7 @@ namespace panel
         Bounds rect = panel->bounds;
         int x { rect.xmin + borderWidth },
             y { rect.ymin + titleSize };
-        int w { rect.xmax - x - borderWidth },
+        int w { rect.xmax - x - borderWidth }, 
             h { rect.ymax - y - borderWidth };
         BeginScissorMode(x, y, w, h);
     }
