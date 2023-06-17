@@ -78,13 +78,23 @@ namespace panel
         return result;
     }
 
-    void DrawPanel(const Panel* panel)
+    void DrawPanelBackground(const Panel* panel)
     {
-        // Main panel
-        DrawRectangle(panel->bounds.xmin, panel->bounds.ymin, panel->bounds.xmax - panel->bounds.xmin, panel->bounds.ymax - panel->bounds.ymin, accent);
-        constexpr int borderInset = borderWidth * 2;
-        DrawRectangle(panel->bounds.xmin + borderWidth, panel->bounds.ymin + borderWidth, panel->bounds.xmax - panel->bounds.xmin - borderInset, panel->bounds.ymax - panel->bounds.ymin - borderInset, background);
+        Bounds rect = panel->bounds;
+        int x { rect.xmin },
+            y { rect.ymin };
+        int w { rect.xmax - x },
+            h { rect.ymax - y };
+        DrawRectangle(x, y, w, h, accent);
 
+        int borderInset = borderWidth * 2;
+
+        // Main panel
+        DrawRectangle(x + borderWidth, y + borderWidth, w - borderInset, h - borderInset, background);
+    }
+
+    void DrawPanelTitlebar(const Panel* panel)
+    {        
         // Title section
         constexpr int titleBarHeight = titlePaddingY * 2 + titleSize;
         DrawRectangle(panel->bounds.xmin, panel->bounds.ymin, panel->bounds.xmax - panel->bounds.xmin, titleBarHeight, accent);
@@ -101,5 +111,20 @@ namespace panel
             int h = hover.bounds.ymax - y;
             DrawRectangle(x, y, w, h, draggableHighlight);
         }
+    }
+
+    void BeginPanelScissor(const Panel* panel)
+    {
+        Bounds rect = panel->bounds;
+        int x { rect.xmin + borderWidth },
+            y { rect.ymin + titleSize };
+        int w { rect.xmax - x - borderWidth },
+            h { rect.ymax - y - borderWidth };
+        BeginScissorMode(x, y, w, h);
+    }
+
+    void EndPanelScissor()
+    {
+        EndScissorMode();
     }
 }

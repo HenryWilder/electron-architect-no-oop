@@ -17,19 +17,19 @@ int main()
     SetTargetFPS(60);
 
     panel::Panel* panels[] = {
-        &console::consolePanel,
         &properties::propertiesPanel,
         &tools::toolsPanel,
-        &graph::graphPanel
+        &graph::graphPanel,
+        &console::consolePanel,
     };
 
     console::Log("Test log 1");
     console::Warn("Test warning 1");
-    console::Warn("Test error 1");
+    console::Error("Test error 1");
     console::Group("Test group 1");
     console::Log("Test log 2");
     console::Warn("Test warning 2");
-    console::Warn("Test error 2");
+    console::Error("Test error 2");
     console::GroupEnd();
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
@@ -126,7 +126,9 @@ int main()
 
         for (panel::Panel* currentPanel : panels)
         {
-            panel::DrawPanel(currentPanel);
+            panel::DrawPanelBackground(currentPanel);
+
+            panel::BeginPanelScissor(currentPanel);
             
             if (currentPanel == &console::consolePanel)
             {
@@ -144,6 +146,10 @@ int main()
             {
                 tools::DrawPanelContents();
             }
+
+            panel::EndPanelScissor();
+
+            panel::DrawPanelTitlebar(currentPanel);
         }
 
         if (currentlyDragging)

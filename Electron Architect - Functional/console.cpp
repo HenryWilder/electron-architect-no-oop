@@ -43,32 +43,52 @@ namespace console
 		int panelHeight = consolePanel.bounds.ymax - consolePanel.bounds.ymin;
 		int bodyHeight = panelHeight - panel::panelTitlebarHeight;
 		int contentBoxHeight = bodyHeight - consolePaddingY * 2;
-		int numFittableLogs = contentBoxHeight / lineHeight;
+		int numFittableLogs = contentBoxHeight / lineHeight + 2;
 
 		return (size_t)numFittableLogs;
 	}
 
 	// Todo: Make this work for multiline logs
-	void DrawPanelContents()
+	void DrawPanelContents() 
 	{
 		size_t displayableLogs = CalculateDisplayableLogCount();
 		size_t startLog = totalLogs < displayableLogs ? 0 : totalLogs - displayableLogs;
 		size_t numDisplayableLogs = totalLogs - startLog;
 		int logBoxXMin = consolePanel.bounds.xmin + panel::borderWidth;
 		int logBoxXMax = consolePanel.bounds.xmax - panel::borderWidth;
-		int logBoxYMin = consolePanel.bounds.ymin + panel::panelTitlebarHeight;
-		for (size_t i = 0; i < numDisplayableLogs; ++i)
+		int logBoxYMax = consolePanel.bounds.ymax - panel::borderWidth;
+		int logBoxYMin = logBoxYMax - lineHeight;
+		for (size_t _i = numDisplayableLogs; _i > 0; --_i)
 		{
+			size_t i = _i - 1;
 			size_t logIndex = startLog + i;
 			LogElement log = logs[logIndex];
-			DrawRectangle(logBoxXMin, logBoxYMin, logBoxXMax - logBoxXMin, lineHeight, SKYBLUE);
+			Color color, backgroundColor;
+			switch (log.style)
+			{
+			case LogStyle::Warning:
+				backgroundColor = Color{ 127,127,0, 64 };
+				color = Color{ 255,255,0, 255 };
+				break;
+
+			case LogStyle::Error:
+				backgroundColor = Color{ 127,0,0, 64 };
+				color = Color{ 255,0,0, 255 };
+				break;
+
+			default:
+				backgroundColor = Color{ 0,0,0, 64 };
+				color = Color{ 255,255,255, 255 };
+				break;
+			}
+			DrawRectangle(logBoxXMin, logBoxYMin, logBoxXMax - logBoxXMin, lineHeight, backgroundColor);
 			DrawText(
 				log.content,
 				logBoxXMin + log.indent * logIndentWidth + consolePaddingX,
 				logBoxYMin + consolePaddingY,
 				8,
-				WHITE);
-			logBoxYMin += lineHeight;
+				color);
+			logBoxYMin -= lineHeight;
 		}
 	}
 
