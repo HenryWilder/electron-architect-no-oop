@@ -101,40 +101,40 @@ namespace panel
         int w{ rect.xmax - x },
             h{ rect.ymax - y };
 
-        // Title section
-        constexpr int titleBarHeight = titlePaddingY * 2 + titleSize;
-        DrawRectangle(x, y, w, titleBarHeight, accent);
-        DrawText(panel->title, x + titlePaddingX, y + titlePaddingY, titleSize, foreground);
-
         // Shadow
-        BeginPanelScissor(panel);
-        BeginBlendMode(BLEND_MULTIPLIED);
+        if (BeginPanelScissor(panel))
+        {
+            BeginBlendMode(BLEND_MULTIPLIED);
 
-        const Color transparent = { 0,0,0, 0 };
-        const Color mainShadow = { 0,0,0, 64 };
-        const Color ambiShadow = { 0,0,0, 32 };
+            const Color transparent = { 0,0,0, 0 };
+            const Color mainShadow = { 0,0,0, 64 };
+            const Color ambiShadow = { 0,0,0, 32 };
 
-        int mainShadowSize{ 4 },
-            ambiShadowSize{ 16 };
+            int mainShadowSize{ 4 },
+                ambiShadowSize{ 16 };
 
-        // Top
-        DrawRectangleGradientV(x, y + titleBarHeight, w, ambiShadowSize, ambiShadow, transparent);
-        DrawRectangleGradientV(x, y + titleBarHeight, w, mainShadowSize, mainShadow, transparent);
+            // Top
+            DrawRectangleGradientV(x, y + panelTitlebarHeight, w, ambiShadowSize, ambiShadow, transparent);
+            DrawRectangleGradientV(x, y + panelTitlebarHeight, w, mainShadowSize, mainShadow, transparent);
 
-        // Bottom
-        DrawRectangleGradientV(x, y + h - ambiShadowSize, w, ambiShadowSize, transparent, ambiShadow);
-        DrawRectangleGradientV(x, y + h - mainShadowSize, w, mainShadowSize, transparent, mainShadow);
+            // Bottom
+            DrawRectangleGradientV(x, y + h - ambiShadowSize, w, ambiShadowSize, transparent, ambiShadow);
+            DrawRectangleGradientV(x, y + h - mainShadowSize, w, mainShadowSize, transparent, mainShadow);
 
-        // Left
-        DrawRectangleGradientH(x, y + titleBarHeight, ambiShadowSize, h, ambiShadow, transparent);
-        DrawRectangleGradientH(x, y + titleBarHeight, mainShadowSize, h, mainShadow, transparent);
+            // Left
+            DrawRectangleGradientH(x, y + panelTitlebarHeight, ambiShadowSize, h, ambiShadow, transparent);
+            DrawRectangleGradientH(x, y + panelTitlebarHeight, mainShadowSize, h, mainShadow, transparent);
 
-        // Right
-        DrawRectangleGradientH(x + w - ambiShadowSize, y + titleBarHeight, ambiShadowSize, h, transparent, ambiShadow);
-        DrawRectangleGradientH(x + w - mainShadowSize, y + titleBarHeight, mainShadowSize, h, transparent, mainShadow);
+            // Right
+            DrawRectangleGradientH(x + w - ambiShadowSize, y + panelTitlebarHeight, ambiShadowSize, h, transparent, ambiShadow);
+            DrawRectangleGradientH(x + w - mainShadowSize, y + panelTitlebarHeight, mainShadowSize, h, transparent, mainShadow);
 
-        EndBlendMode();
-        EndPanelScissor();
+            EndBlendMode();
+        } EndPanelScissor();
+
+        // Title section
+        DrawRectangle(x, y, w, panelTitlebarHeight, accent);
+        DrawText(panel->title, x + titlePaddingX, y + titlePaddingY, titleSize, foreground);
     }
 
     void DrawPanelDragElement(Bounds rect, const PanelHover& hover)
@@ -149,14 +149,17 @@ namespace panel
         }
     }
 
-    void BeginPanelScissor(const Panel* panel)
+    bool BeginPanelScissor(const Panel* panel)
     {
         Bounds rect = panel->bounds;
         int x { rect.xmin + borderWidth },
             y { rect.ymin + titleSize };
         int w { rect.xmax - x - borderWidth }, 
             h { rect.ymax - y - borderWidth };
+
         BeginScissorMode(x, y, w, h);
+
+        return w > 0 && h > 0;
     }
 
     void EndPanelScissor()

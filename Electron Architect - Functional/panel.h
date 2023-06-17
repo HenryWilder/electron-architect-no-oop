@@ -17,8 +17,8 @@ namespace panel
 
     constexpr int panelTitlebarHeight = titlePaddingY * 2 + titleSize; // The height of the titlebar section of a panel
 
-    constexpr int minWidth= 60; // Minimum width of a standard panel in pixels
-    constexpr int minHeight = 30; // Minimum height of a standard panel in pixels
+    constexpr int minWidth= 0; // Minimum width of a standard panel in pixels
+    constexpr int minHeight = 0; // Minimum height of a standard panel in pixels
 
     // int | int*
     struct IntOrIntPtr
@@ -245,8 +245,10 @@ namespace panel
     // Draws a panel's title bar
     void DrawPanelTitlebar(const Panel* panel);
 
-    // Creates a scissor so that whatever renders until the end scissor is only shown within the panel's borders
-    void BeginPanelScissor(const Panel* panel);
+    // Creates a scissor so that whatever renders until the end scissor is only shown within the panel's borders.
+    // Returns true on success, returns false on failure. If false, don't even bother drawing the panel contents.
+    // Scissor mode is still entered on failure though, so you should still call EndPanelScissor() anyway.
+    bool BeginPanelScissor(const Panel* panel);
 
     // Finishes the panel scissor
     void EndPanelScissor();

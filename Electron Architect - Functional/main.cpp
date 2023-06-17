@@ -23,6 +23,8 @@ int main()
         &console::consolePanel,
     };
 
+    console::CalculateDisplayableLogCount();
+
     console::Log("Test log 1");
     console::Warn("Test warning 1");
     console::Error("Test error 1");
@@ -118,6 +120,8 @@ int main()
                 int y = Clamp(mouseCurrY + mouseOffsY, currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
                 draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->bounds.ymax = y) - panel::panelDraggableWidth;
             }
+
+            console::CalculateDisplayableLogCount();
         }
 
         BeginDrawing();
@@ -128,26 +132,26 @@ int main()
         {
             panel::DrawPanelBackground(currentPanel);
 
-            panel::BeginPanelScissor(currentPanel);
-            
-            if (currentPanel == &console::consolePanel)
+            if (panel::BeginPanelScissor(currentPanel))
             {
-                console::DrawPanelContents();
-            }
-            else if (currentPanel == &properties::propertiesPanel)
-            {
-                properties::DrawPanelContents();
-            }
-            else if (currentPanel == &graph::graphPanel)
-            {
-                graph::DrawPanelContents();
-            }
-            else if (currentPanel == &tools::toolsPanel)
-            {
-                tools::DrawPanelContents();
-            }
+                if (currentPanel == &console::consolePanel)
+                {
+                    console::DrawPanelContents();
+                }
+                else if (currentPanel == &properties::propertiesPanel)
+                {
+                    properties::DrawPanelContents();
+                }
+                else if (currentPanel == &graph::graphPanel)
+                {
+                    graph::DrawPanelContents();
+                }
+                else if (currentPanel == &tools::toolsPanel)
+                {
+                    tools::DrawPanelContents();
+                }
 
-            panel::EndPanelScissor();
+            } panel::EndPanelScissor();
 
             panel::DrawPanelTitlebar(currentPanel);
         }

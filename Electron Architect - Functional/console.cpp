@@ -32,26 +32,32 @@ namespace console
 	};
 
 	constexpr int lineHeight = 16;
-	constexpr int logIndentWidth = 10;
+	constexpr int logIndentWidth = 16;
 	constexpr size_t maxLogs = 32;
 	LogElement logs[maxLogs];
 	size_t currentIndent = 0;
 	size_t totalLogs = 0; // At most maxLogs
+	size_t displayableLogCount = 0; // Update when panel size changes
 
-	size_t CalculateDisplayableLogCount()
+	void CalculateDisplayableLogCount()
 	{
 		int panelHeight = consolePanel.bounds.ymax - consolePanel.bounds.ymin;
+		if (panelHeight <= panel::panelTitlebarHeight)
+		{
+			displayableLogCount = 0;
+			return;
+		}
 		int bodyHeight = panelHeight - panel::panelTitlebarHeight;
 		int contentBoxHeight = bodyHeight - consolePaddingY * 2;
 		int numFittableLogs = contentBoxHeight / lineHeight + 2;
 
-		return (size_t)numFittableLogs;
+		displayableLogCount = (size_t)numFittableLogs;
 	}
 
 	// Todo: Make this work for multiline logs
 	void DrawPanelContents() 
 	{
-		size_t displayableLogs = CalculateDisplayableLogCount();
+		size_t displayableLogs = displayableLogCount;
 		size_t startLog = totalLogs < displayableLogs ? 0 : totalLogs - displayableLogs;
 		size_t numDisplayableLogs = totalLogs - startLog;
 		int logBoxXMin = consolePanel.bounds.xmin + panel::borderWidth;
@@ -67,17 +73,17 @@ namespace console
 			switch (log.style)
 			{
 			case LogStyle::Warning:
-				backgroundColor = Color{ 127,127,0, 64 };
+				backgroundColor = Color{ 127,127,0, 32 };
 				color = Color{ 255,255,0, 255 };
 				break;
 
 			case LogStyle::Error:
-				backgroundColor = Color{ 127,0,0, 64 };
+				backgroundColor = Color{ 127,0,0, 32 };
 				color = Color{ 255,0,0, 255 };
 				break;
 
 			default:
-				backgroundColor = Color{ 0,0,0, 64 };
+				backgroundColor = Color{ 0,0,0, 0 };
 				color = Color{ 255,255,255, 255 };
 				break;
 			}
