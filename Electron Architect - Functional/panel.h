@@ -17,8 +17,8 @@ namespace panel
 
     constexpr int panelTitlebarHeight = titlePaddingY * 2 + titleSize; // The height of the titlebar section of a panel
 
-    constexpr int minWidth= 0; // Minimum width of a standard panel in pixels
-    constexpr int minHeight = 0; // Minimum height of a standard panel in pixels
+    constexpr int minWidth= 1; // Minimum width of a standard panel in pixels
+    constexpr int minHeight = 1; // Minimum height of a standard panel in pixels
 
     // int | int*
     struct IntOrIntPtr

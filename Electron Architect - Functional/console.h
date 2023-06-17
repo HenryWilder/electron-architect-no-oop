@@ -15,6 +15,7 @@ namespace console
 	void Log  (const char* text);
 	void Warn (const char* text);
 	void Error(const char* text);
+	void Assert(bool condition, const char* text);
 	void Group(const char* groupName);
 	void GroupEnd();
 	void Clear();

@@ -132,6 +132,8 @@ int main()
         {
             panel::DrawPanelBackground(currentPanel);
 
+            console::Assert(false, "Hello");
+
             if (panel::BeginPanelScissor(currentPanel))
             {
                 if (currentPanel == &console::consolePanel)

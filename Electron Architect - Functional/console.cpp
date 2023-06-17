@@ -135,6 +135,14 @@ namespace console
 		AppendLog(LogStyle::Error, text);
 	}
 
+	void Assert(bool condition, const char * text)
+	{
+		if (!condition)
+		{
+			Error(TextFormat("Assertion failed: %s", text));
+		}
+	}
+
 	void Group(const char* groupName)
 	{
 		AppendLog(LogStyle::Normal, groupName);
