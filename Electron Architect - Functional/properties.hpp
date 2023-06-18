@@ -8,37 +8,28 @@ namespace properties
     void DrawPanelContents();
 
     // A unique ID for tracking whether the property list needs to be cleared.
-    size_t showingPropertiesFor = NULL;
+    extern size_t showingPropertiesFor;
 
-    constexpr size_t npos = (size_t)(-1ull);
+    // Todo
+#if false
+    void InsertIntProperty(const char* name, long long value, size_t index);
+    inline void InsertIntProperty(const char* name, int value, size_t index) { InsertIntProperty(name, (long long)value, index); }
+    void InsertFloatProperty(const char* name, double value, size_t index);
+    inline void InsertFloatProperty(const char* name, float value, size_t index) { InsertFloatProperty(name, (double)value, index); }
+    void InsertStringProperty(const char* name, const char* value, size_t index);
+    void InsertPropertyCollectionHeader(const char* name, const char* collectionName, size_t index);
+    void InsertTopLevelPropertyCollectionHeader(const char* collectionName, size_t index);
+    void InsertPropertyCollectionCloser(size_t index);
+#endif
 
-    // Inserts an integer property at the specified index
-    void AddProperty(const char* name, long long value, size_t index);
-    // Inserts an integer property at the specified index
-    inline void AddProperty(const char* name, int value, size_t index) { AddProperty(name, (long long)value, index); }
-    // Inserts a float property at the specified index
-    void AddProperty(const char* name, double value, size_t index);
-    // Inserts a string property at the specified index
-    void AddProperty(const char* name, const char* value, size_t index);
-    // Inserts a named property collection header at the specified index
-    void BeginPropertyCollection(const char* name, const char* collectionName, size_t index);
-    // Inserts an anonymous property collection header at the specified index
-    void BeginPropertyCollection(const char* collectionName, size_t index);
-    // Applies ownership to properties between the last property collection header and the specified index
-    void EndPropertyCollection(size_t index);
-
-    // Appends an integer property
-    void AddProperty(const char* name, long long value);
-    // Appends a float property
-    void AddProperty(const char* name, double value);
-    // Appends a string property
-    void AddProperty(const char* name, const char* value);
-    // Appends a named property collection header
-    void BeginPropertyCollection(const char* name, const char* collectionName);
-    // Appends an anonymous property collection header
-    void BeginPropertyCollection(const char* collectionName);
-    // Applies ownership to properties since the last property collection header
-    void EndPropertyCollection();
+    void AddIntProperty(const char* name, long long value);
+    inline void AddIntProperty(const char* name, int value) { AddIntProperty(name, (long long)value); }
+    void AddFloatProperty(const char* name, double value);
+    inline void AddFloatProperty(const char* name, float value) { AddFloatProperty(name, (double)value); }
+    void AddStringProperty(const char* name, const char* value);
+    void AddPropertyCollectionHeader(const char* name, const char* collectionName);
+    void AddTopLevelPropertyCollectionHeader(const char* collectionName);
+    void AddPropertyCollectionCloser();
 
     void ClearProperties();
 }

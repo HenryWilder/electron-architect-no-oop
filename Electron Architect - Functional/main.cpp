@@ -43,7 +43,12 @@ int main()
     console::Assert(false, "Hello");
     console::Assert(false, "Hello");
 
-    properties::AddProperty("Int 1", (long long)55234);
+    properties::AddIntProperty("Int 1", 55234);
+    properties::AddIntProperty("Long long 1", 235423ll);
+    properties::AddFloatProperty("Float 1", 243.34782f);
+    properties::AddFloatProperty("Double 1", 453.93332384);
+    properties::AddTopLevelPropertyCollectionHeader("Collection 1");
+    properties::AddTopLevelPropertyCollectionHeader("Collection 2");
 #endif
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
