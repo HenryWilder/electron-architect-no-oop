@@ -53,9 +53,7 @@ namespace console
 
 	// Time in seconds for a log to fade after being unhovered
 	constexpr double logFadeTime = 0.35;
-	constexpr float maxBackgroundAlpha = 0.35f;
-	constexpr float minBackgroundAlpha = 0.2f;
-	constexpr float minBackgroundAlpha_Normal = 0.0f;
+	constexpr float backgroundHoverAlpha = 0.35f;
 
 	void CalculateDisplayableLogCount()
 	{
@@ -100,8 +98,9 @@ namespace console
 				logRef.lastHovered = GetTime();
 			}
 
-			float minBackgroundAlphaHere = (log.type == LOGTYPE_NORMAL) ? minBackgroundAlpha_Normal : minBackgroundAlpha;
-			float backgroundAlpha = Lerp(maxBackgroundAlpha, minBackgroundAlphaHere, EaseInOut(Clamp((float)((GetTime() - log.lastHovered) / logFadeTime), 0.0f, 1.0f)));
+			float minBgAlpha = backgroundHoverAlpha     - ((log.type == LOGTYPE_NORMAL) ? backgroundHoverAlpha : 0.0f);
+			float maxBgAlpha = backgroundHoverAlpha * 2 - ((log.type == LOGTYPE_NORMAL) ? backgroundHoverAlpha : 0.0f);
+			float backgroundAlpha = Lerp(maxBgAlpha, minBgAlpha, EaseInOut(Clamp((float)((GetTime() - log.lastHovered) / logFadeTime), 0.0f, 1.0f)));
 
 			DrawRectangle(logBoxXMin, logBoxYMin, logBoxXMax - logBoxXMin, lineHeight, ColorAlpha(backgroundColor, backgroundAlpha));
 

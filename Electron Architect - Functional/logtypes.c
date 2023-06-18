@@ -17,10 +17,10 @@ const Style logTypeStyles[_LOGTYPE_NUM_TYPES] =
 
 const char* logTypeStr[_LOGTYPE_NUM_TYPES] =
 {
-	"Info",
-	"Error",
-	"Warning",
-	"Failed Assertion"
+	[LOGTYPE_NORMAL] = "Info",
+	[LOGTYPE_WARNING] = "Warning",
+	[LOGTYPE_ERROR] = "Error",
+	[LOGTYPE_FAILED_ASSERTION] = "Assert Failed"
 };
 
 #undef BLUE_STYLE
