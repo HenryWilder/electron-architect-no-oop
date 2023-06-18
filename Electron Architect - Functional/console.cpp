@@ -85,18 +85,18 @@ namespace console
 			switch (log.style)
 			{
 			case LogStyle::Warning:
-				backgroundColor = Color{ 127,127,0, 64 };
+				backgroundColor = Color{ 127,127,0, 32 };
 				color = Color{ 255,255,0, 255 };
 				break;
 
 			case LogStyle::FailedAssertion:
 			case LogStyle::Error:
-				backgroundColor = Color{ 127,0,0, 64 };
+				backgroundColor = Color{ 127,0,0, 32 };
 				color = Color{ 255,0,0, 255 };
 				break;
 
 			default:
-				backgroundColor = Color{ 0,0,0, 0 };
+				backgroundColor = Color{ 0,64,127, 32 };
 				color = Color{ 255,255,255, 255 };
 				break;
 			}
@@ -106,31 +106,31 @@ namespace console
 				logTypeWidth[(int)log.style] = MeasureText(logTypeStr[(int)log.style], 8) + 7;
 			}
 			int displayedCount = log.count <= maxLogCount ? log.count : maxLogCount;
-			const char* displayedCountStr = TextFormat(log.count <= maxLogCount ? "%2i" : "%2i+", displayedCount);
+			const char* displayedCountStr = TextFormat(log.count <= maxLogCount ? "(%i)" : "(%i+)", displayedCount);
 			bool shouldDisplayCount = log.count > 1;
-			int displayedCountWidth = shouldDisplayCount ? 24 : 0;
+			int displayedCountWidth = shouldDisplayCount ? MeasureText(displayedCountStr, 8) + 8 : 0;
 			int indent = log.indent * logIndentWidth;
 			int paddedIndent = indent + consolePaddingX;
 			int logTypeWidthHere = logTypeWidth[(int)log.style];
-			DrawRectangle(logBoxXMin + 1 + indent + displayedCountWidth, logBoxYMin + 2, logTypeWidthHere - 2, lineHeight - 3, backgroundColor);
+			DrawRectangle(logBoxXMin + 1 + indent, logBoxYMin + 2, logTypeWidthHere + displayedCountWidth - 2, lineHeight - 3, ColorAlpha(backgroundColor, 0.25f));
+			DrawText(
+				logTypeStr[(int)log.style],
+				logBoxXMin + paddedIndent,
+				logBoxYMin + consolePaddingY,
+				8,
+				color);
 			if (shouldDisplayCount)
 			{
 				DrawText(
 					displayedCountStr,
-					logBoxXMin + paddedIndent,
+					logBoxXMin + paddedIndent + logTypeWidthHere,
 					logBoxYMin + consolePaddingY,
 					8,
 					color);
 			}
 			DrawText(
-				logTypeStr[(int)log.style],
-				logBoxXMin + paddedIndent + displayedCountWidth,
-				logBoxYMin + consolePaddingY,
-				8,
-				color);
-			DrawText(
 				log.content,
-				logBoxXMin + paddedIndent + logTypeWidthHere + displayedCountWidth,
+				logBoxXMin + paddedIndent + displayedCountWidth + logTypeWidthHere,
 				logBoxYMin + consolePaddingY,
 				8,
 				color);

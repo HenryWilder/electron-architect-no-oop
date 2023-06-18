@@ -34,6 +34,9 @@ int main()
     console::Error("Test error 2");
     console::GroupEnd();
 
+    console::Assert(false, "Hello");
+    console::Assert(false, "Hello");
+
     // Moves the specified panel to the front of the draw order - which is the back of the array.
     auto shiftToFront = [&panels](panel::Panel* panel) {
         constexpr size_t numPanels = sizeof(panels) / sizeof(panel::Panel*);
@@ -131,8 +134,6 @@ int main()
         for (panel::Panel* currentPanel : panels)
         {
             panel::DrawPanelBackground(currentPanel);
-
-            console::Assert(false, "Hello");
 
             if (panel::BeginPanelScissor(currentPanel))
             {
