@@ -11,7 +11,16 @@ namespace console
 		Normal,
 		Warning,
 		Error,
+		FailedAssertion,
 	};
+	const char* logTypeStr[] = {
+		"Info",
+		"Error",
+		"Warning",
+		"Failed Assertion"
+	};
+	// Width of the "log type" segment of the log element
+	int logTypeWidth[4] = {};
 
 	panel::Panel consolePanel = {
 		"Console",
@@ -29,6 +38,7 @@ namespace console
 		LogStyle style;
 		size_t indent;
 		const char* content;
+		size_t count;
 	};
 
 	constexpr int lineHeight = 16;
@@ -73,12 +83,13 @@ namespace console
 			switch (log.style)
 			{
 			case LogStyle::Warning:
-				backgroundColor = Color{ 127,127,0, 32 };
+				backgroundColor = Color{ 127,127,0, 64 };
 				color = Color{ 255,255,0, 255 };
 				break;
 
+			case LogStyle::FailedAssertion:
 			case LogStyle::Error:
-				backgroundColor = Color{ 127,0,0, 32 };
+				backgroundColor = Color{ 127,0,0, 64 };
 				color = Color{ 255,0,0, 255 };
 				break;
 
@@ -88,9 +99,21 @@ namespace console
 				break;
 			}
 			DrawRectangle(logBoxXMin, logBoxYMin, logBoxXMax - logBoxXMin, lineHeight, backgroundColor);
+			if (logTypeWidth[(int)log.style] == 0)
+			{
+				logTypeWidth[(int)log.style] = MeasureText(logTypeStr[(int)log.style], 8) + 7;
+			}
+			int logTypeWidthHere = logTypeWidth[(int)log.style];
+			DrawRectangle(logBoxXMin + 1, logBoxYMin + 2, logTypeWidthHere - 2, lineHeight - 3, backgroundColor);
+			DrawText(
+				logTypeStr[(int)log.style],
+				logBoxXMin + log.indent * logIndentWidth + consolePaddingX,
+				logBoxYMin + consolePaddingY,
+				8,
+				color);
 			DrawText(
 				log.content,
-				logBoxXMin + log.indent * logIndentWidth + consolePaddingX,
+				logBoxXMin + log.indent * logIndentWidth + consolePaddingX + logTypeWidthHere,
 				logBoxYMin + consolePaddingY,
 				8,
 				color);
@@ -139,7 +162,7 @@ namespace console
 	{
 		if (!condition)
 		{
-			Error(TextFormat("Assertion failed: %s", text));
+			AppendLog(LogStyle::FailedAssertion, text);
 		}
 	}
 
