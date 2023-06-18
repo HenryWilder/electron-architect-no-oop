@@ -1,5 +1,5 @@
-#include "console.h"
-#include "tools.h"
+#include "console.hpp"
+#include "tools.hpp"
 
 namespace tools
 {

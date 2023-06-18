@@ -1,11 +1,11 @@
-#include "panel.h"
+#include "panel.hpp"
 
 namespace panel
 {
-    Color background = DARKGRAY;
-    Color accent = GRAY;
-    Color foreground = WHITE;
-    Color draggableHighlight = YELLOW;
+    Color background = { 31,31,32, 255 };
+    Color accent = { 65,65,66, 255 };
+    Color foreground = { 245,245,245, 255 };
+    Color draggableHighlight = { 255,255,0, 255 };
 
     Bounds windowBounds = { 0, 0, 0, 0 };
 

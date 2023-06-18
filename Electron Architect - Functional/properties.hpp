@@ -1,5 +1,5 @@
 #pragma once
-#include "panel.h"
+#include "panel.hpp"
 
 // Functions related to the Properties panel.
 namespace properties

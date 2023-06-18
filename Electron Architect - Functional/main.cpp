@@ -1,10 +1,15 @@
 #include <raylib.h>
 #include <raymath.h>
-#include "panel.h"
-#include "console.h"
-#include "properties.h"
-#include "tools.h"
-#include "graph.h"
+#include "panel.hpp"
+#include "console.hpp"
+#include "properties.hpp"
+#include "tools.hpp"
+#include "graph.hpp"
+
+int ClampInt(int x, int min, int max)
+{
+    return ((x > max) ? (max) : ((x < min) ? (min) : (x)));
+}
 
 int main()
 {
@@ -23,8 +28,9 @@ int main()
         &console::consolePanel,
     };
 
-    console::CalculateDisplayableLogCount();
+    console::CalculateDisplayableLogCount(); // Call at beginning so that panels don't need to move to "activate" the console
 
+#if _DEBUG // Testing
     console::Log("Test log 1");
     console::Warn("Test warning 1");
     console::Error("Test error 1");
@@ -36,6 +42,7 @@ int main()
 
     console::Assert(false, "Hello");
     console::Assert(false, "Hello");
+#endif
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
     auto shiftToFront = [&panels](panel::Panel* panel) {
@@ -67,6 +74,10 @@ int main()
 
     while (!WindowShouldClose())
     {
+        // Whether or not the mouse is currently doing something that should prevent hover effects/interactions from occurring
+        // Todo: Make this more robust with prioritization and interruption
+        bool hoverDisabled = false;
+
         int mouseCurrX{ GetMouseX() }, mouseCurrY{ GetMouseY() };
         int mouseDltaX{ mouseCurrX - mousePrevX }, mouseDltaY{ mouseCurrY - mousePrevY };
 
@@ -97,34 +108,36 @@ int main()
             }
         }
 
+        hoverDisabled = !!currentlyDragging;
+
         if (currentlyDragging)
         {
             // Left
             if (panel::HasLeft(draggingInfo.identity))
             {
-                int x = Clamp(mouseCurrX + mouseOffsX, 0, currentlyDragging->bounds.xmax - panel::minWidth);
+                int x = ClampInt(mouseCurrX + mouseOffsX, 0, currentlyDragging->bounds.xmax - panel::minWidth);
                 draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->bounds.xmin = x) + panel::panelDraggableWidth;
             }
             // Right
             else if (panel::HasRight(draggingInfo.identity))
             {
-                int x = Clamp(mouseCurrX + mouseOffsX, currentlyDragging->bounds.xmin + panel::minWidth, windowWidth);
+                int x = ClampInt(mouseCurrX + mouseOffsX, currentlyDragging->bounds.xmin + panel::minWidth, windowWidth);
                 draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->bounds.xmax = x) - panel::panelDraggableWidth;
             }
             // Top
             if (panel::HasTop(draggingInfo.identity))
             {
-                int y = Clamp(mouseCurrY + mouseOffsY, 0, currentlyDragging->bounds.ymax - panel::minHeight);
+                int y = ClampInt(mouseCurrY + mouseOffsY, 0, currentlyDragging->bounds.ymax - panel::minHeight);
                 draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->bounds.ymin = y) + panel::panelDraggableWidth;
             }
             // Bottom
             else if (panel::HasBottom(draggingInfo.identity))
             {
-                int y = Clamp(mouseCurrY + mouseOffsY, currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
+                int y = ClampInt(mouseCurrY + mouseOffsY, currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
                 draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->bounds.ymax = y) - panel::panelDraggableWidth;
             }
 
-            console::CalculateDisplayableLogCount();
+            console::CalculateDisplayableLogCount(); // Call once per tick, while panels move
         }
 
         BeginDrawing();
@@ -139,7 +152,7 @@ int main()
             {
                 if (currentPanel == &console::consolePanel)
                 {
-                    console::DrawPanelContents();
+                    console::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled);
                 }
                 else if (currentPanel == &properties::propertiesPanel)
                 {

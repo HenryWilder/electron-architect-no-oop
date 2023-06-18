@@ -1,5 +1,5 @@
-#include "console.h"
-#include "properties.h"
+#include "console.hpp"
+#include "properties.hpp"
 
 namespace properties
 {

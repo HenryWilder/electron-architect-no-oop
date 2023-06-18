@@ -42,33 +42,39 @@
     <ClCompile Include="panel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="logtypes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="console.h">
+    <ClInclude Include="console.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="properties.h">
+    <ClInclude Include="properties.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tools.h">
+    <ClInclude Include="tools.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="settings.h">
+    <ClInclude Include="settings.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="graph.h">
+    <ClInclude Include="graph.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="serialize.h">
+    <ClInclude Include="serialize.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="input.h">
+    <ClInclude Include="input.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="panel.h">
+    <ClInclude Include="panel.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="logtypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

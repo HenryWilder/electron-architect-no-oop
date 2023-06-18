@@ -1,7 +1,7 @@
-#include "console.h"
-#include "properties.h"
-#include "tools.h"
-#include "graph.h"
+#include "console.hpp"
+#include "properties.hpp"
+#include "tools.hpp"
+#include "graph.hpp"
 
 namespace graph
 {
