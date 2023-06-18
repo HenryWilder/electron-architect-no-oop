@@ -42,6 +42,8 @@ int main()
 
     console::Assert(false, "Hello");
     console::Assert(false, "Hello");
+
+    properties::AddProperty("Int 1", (long long)55234);
 #endif
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
