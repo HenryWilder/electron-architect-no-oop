@@ -44,6 +44,8 @@ namespace console
 	constexpr int lineHeight = 16;
 	constexpr int logIndentWidth = 16;
 	constexpr size_t maxLogs = 32;
+	// Log count before log won't increment
+	constexpr size_t maxLogCount = 99;
 	LogElement logs[maxLogs];
 	size_t currentIndent = 0;
 	size_t totalLogs = 0; // At most maxLogs
@@ -103,17 +105,32 @@ namespace console
 			{
 				logTypeWidth[(int)log.style] = MeasureText(logTypeStr[(int)log.style], 8) + 7;
 			}
+			int displayedCount = log.count <= maxLogCount ? log.count : maxLogCount;
+			const char* displayedCountStr = TextFormat(log.count <= maxLogCount ? "%2i" : "%2i+", displayedCount);
+			bool shouldDisplayCount = log.count > 1;
+			int displayedCountWidth = shouldDisplayCount ? 24 : 0;
+			int indent = log.indent * logIndentWidth;
+			int paddedIndent = indent + consolePaddingX;
 			int logTypeWidthHere = logTypeWidth[(int)log.style];
-			DrawRectangle(logBoxXMin + 1, logBoxYMin + 2, logTypeWidthHere - 2, lineHeight - 3, backgroundColor);
+			DrawRectangle(logBoxXMin + 1 + indent + displayedCountWidth, logBoxYMin + 2, logTypeWidthHere - 2, lineHeight - 3, backgroundColor);
+			if (shouldDisplayCount)
+			{
+				DrawText(
+					displayedCountStr,
+					logBoxXMin + paddedIndent,
+					logBoxYMin + consolePaddingY,
+					8,
+					color);
+			}
 			DrawText(
 				logTypeStr[(int)log.style],
-				logBoxXMin + log.indent * logIndentWidth + consolePaddingX,
+				logBoxXMin + paddedIndent + displayedCountWidth,
 				logBoxYMin + consolePaddingY,
 				8,
 				color);
 			DrawText(
 				log.content,
-				logBoxXMin + log.indent * logIndentWidth + consolePaddingX + logTypeWidthHere,
+				logBoxXMin + paddedIndent + logTypeWidthHere + displayedCountWidth,
 				logBoxYMin + consolePaddingY,
 				8,
 				color);
@@ -121,9 +138,40 @@ namespace console
 		}
 	}
 
+	bool TextMatches(const char* str1, const char* str2)
+	{
+		if (str1 == nullptr || str2 == nullptr)
+		{
+			return false;
+		}
+
+		for (; *str1 != '\0' || *str2 != '\0'; ++str1, ++str2)
+		{
+			if (*str1 != *str2)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	// todo: style
 	void AppendLog(LogStyle style, const char* text)
 	{
+		if (totalLogs != 0)
+		{
+			LogElement& lastLog = logs[totalLogs - 1];
+			if (TextMatches(text, lastLog.content))
+			{
+				if (lastLog.count <= maxLogCount)
+				{
+					++lastLog.count;
+				}
+				return;
+			}
+		}
+
 		if (totalLogs < maxLogs)
 		{
 			++totalLogs;
@@ -140,6 +188,7 @@ namespace console
 			style,
 			currentIndent,
 			text,
+			1,
 		};
 	}
 
