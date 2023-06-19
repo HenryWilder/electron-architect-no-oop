@@ -16,8 +16,12 @@ namespace properties
 
 	struct Property
 	{
-		const char* name;	  // nullptr for closers
-		const char* valueStr; // nullptr for headers
+		const char* name     = nullptr; // nullptr for closers
+		const char* valueStr = nullptr; // nullptr for headers
+
+		bool usesHeap = false; // If true: Needs to be freed when clearing the properties console or updating the value string.
+		// Reasoning: The alternatives are storing the pointers in a map (which would require find()-ing any time we want to replace the value),
+		// or storing an unknown number of variables of unknown types and redundantly reformatting every frame just in case TextFormat() runs out of buffer.
 	};
 
 	constexpr size_t MAX_PROPS = 1024;
@@ -87,21 +91,32 @@ namespace properties
 
 	void AddProperty(const char* name, const char* valueStr)
 	{
-		_AddProperty({ name, valueStr });
+		_AddProperty({ name, valueStr, false });
 	}
 
 	void AddPropertyHeader(const char* name)
 	{
-		_AddProperty({ name });
+		_AddProperty({ name, nullptr, false });
 	}
 
 	void AddPropertyCloser()
 	{
-		_AddProperty({});
+		_AddProperty({ nullptr, nullptr, false });
 	}
 
 	void ClearProperties()
 	{
+		for (Property& prop : props)
+		{
+			if (prop.usesHeap)
+			{
+				delete prop.valueStr;
+#if _DEBUG
+				prop.valueStr = "[USING DELETED MEMORY]";
+				prop.usesHeap = false;
+#endif
+			}
+		}
 		numProps = 0;
 	}
 }

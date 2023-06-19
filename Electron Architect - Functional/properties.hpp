@@ -12,6 +12,9 @@ namespace properties
 
     // Adds a property
     void AddProperty(const char* name, const char* valueStr);
+    // Adds a property with formatting
+    // (Warning: uses heap memory)
+    void AddProperty(const char* name, const char* fmt, const char* valueStr);
     // Indents following properties
     void AddPropertyHeader(const char* name);
     // Unindents following properties
