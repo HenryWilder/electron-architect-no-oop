@@ -43,12 +43,25 @@ int main()
     console::Assert(false, "Hello");
     console::Assert(false, "Hello");
 
-    properties::AddIntProperty("Int 1", 55234);
-    properties::AddIntProperty("Long long 1", 235423ll);
-    properties::AddFloatProperty("Float 1", 243.34782f);
-    properties::AddFloatProperty("Double 1", 453.93332384);
-    properties::AddTopLevelPropertyCollectionHeader("Collection 1");
-    properties::AddTopLevelPropertyCollectionHeader("Collection 2");
+    properties::AddProperty("Int 1", "55234");
+    properties::AddProperty("Long long 1", "23542346434534");
+    properties::AddProperty("Float 1", "243.34782");
+    properties::AddProperty("Double 1", "453.93332384");
+    properties::AddPropertyHeader("Collection 1");
+    properties::AddProperty("Int 2", "56435");
+    properties::AddProperty("Long long 2", "67574563653463");
+    properties::AddProperty("Float 2", "453.63534");
+    properties::AddProperty("Double 2", "343423.4578975757364563");
+    properties::AddPropertyCloser();
+    properties::AddPropertyHeader("Collection 2");
+    properties::AddProperty("Int 3", "48325");
+    properties::AddProperty("Long long 3", "6372795382473892");
+    properties::AddProperty("Float 3", "534.34782");
+    properties::AddProperty("Double 3", "23462.74567246573456");
+    properties::AddPropertyHeader("Collection 2.1");
+    properties::AddProperty("Hello", ":3");
+    properties::AddPropertyCloser();
+    properties::AddPropertyCloser();
 #endif
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
