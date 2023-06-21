@@ -1,5 +1,14 @@
 #pragma once
 #include "panel.hpp"
+#include <concepts>
+
+enum class PropType
+{
+    Int,
+    Float,
+    String,
+    Any, // Displays as a string but with a different tag
+};
 
 // Functions related to the Properties panel.
 namespace properties
@@ -10,11 +19,32 @@ namespace properties
     // A unique ID for tracking whether the property list needs to be cleared.
     extern size_t showingPropertiesFor;
 
-    // Adds a property
-    void Add(const char* name, const char* valueStr);
-
     // Adds a property with formatting
-    void Addf(const char* name, const char* fmt...);
+    void Addf(const char* name, PropType type, const char* fmt...);
+
+    // Adds an integer property
+    template<std::signed_integral T>
+    void AddInt(const char* name, T value)
+    {
+        properties::Addf(name, PropType::Int, "%i", value);
+    }
+
+    // Adds an integer property
+    template<std::unsigned_integral T>
+    void AddInt(const char* name, T value)
+    {
+        properties::Addf(name, PropType::Int, "%u", value);
+    }
+
+    // Adds a float property
+    template<std::floating_point T>
+    void AddFloat(const char* name, T value)
+    {
+        properties::Addf(name, PropType::Float, "%f", value);
+    }
+
+    // Adds a string property
+    void AddString(const char* name, const char* value);
 
     // Adds a linked property with formatting
     // (Prefer Add() or Addf() if the value will not change until the properties panel changes)

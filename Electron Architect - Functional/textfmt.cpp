@@ -62,6 +62,15 @@ char* Formatted(const char* _Format, va_list _ArgList)
 	return result;
 }
 
+char* FormattedV(const char* _Format, ...)
+{
+	va_list args;
+	va_start(args, _Format);
+	char* result = Formatted(_Format, args);
+	va_end(args);
+	return result;
+}
+
 char* Formatted(size_t hintSizeMax, const char* _Format, va_list _ArgList)
 {
 	char* result = _Formatted_MinComplexity(hintSizeMax, _Format, _ArgList);

@@ -4,6 +4,10 @@
 char* Formatted(const char* _Format, va_list _ArgList);
 
 // Creates a string using memory from the heap - Remember to free when done using
+// Variadic version
+char* FormattedV(const char* _Format, ...);
+
+// Creates a string using memory from the heap - Remember to free when done using
 // Saves time AND space when the string size is roughly known
 // Examples:
 // - We are printing a number with fixed digits (("0x%06i", n): hintSizeMax = 9)

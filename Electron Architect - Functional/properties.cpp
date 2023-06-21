@@ -22,13 +22,6 @@ namespace properties
 	// If both name and valueStr are nullptr, this is a closer.
 	struct Property
 	{
-		enum class LinkType
-		{
-			Int,
-			Float,
-			String,
-		};
-
 		// The name of the property
 		const char* name = nullptr;
 
@@ -40,7 +33,7 @@ namespace properties
 		const void* value = nullptr;
 
 		// Only use when value is a pointer to a value
-		LinkType linkType = LinkType::Int;
+		PropType type = PropType::Any;
 
 		// Set anytime name changes (hopefully only once)
 		int nameWidth = -1;
@@ -112,7 +105,7 @@ namespace properties
 			{
 				numLines = CountNewlines((const char*)prop.value);
 			}
-			else if (prop.value && prop.fmt && prop.linkType == Property::LinkType::String)
+			else if (prop.value && prop.fmt && prop.type == PropType::String)
 			{
 				numLines = CountNewlines(*(const char* const*)prop.value);
 			}
@@ -196,17 +189,17 @@ namespace properties
 				}
 				else
 				{
-					switch (prop.linkType)
+					switch (prop.type)
 					{
-					case Property::LinkType::Int:
+					case PropType::Int:
 						valueStr = TextFormat(prop.fmt, *(const int*)prop.value);
 						break;
 
-					case Property::LinkType::Float:
+					case PropType::Float:
 						valueStr = TextFormat(prop.fmt, *(const float*)prop.value);
 						break;
 
-					case Property::LinkType::String:
+					case PropType::String:
 						valueStr = TextFormat(prop.fmt, *(const char* const*)prop.value);
 						break;
 					}
@@ -224,7 +217,7 @@ namespace properties
 		}
 	}
 
-	void _Add(Property newProperty)
+	void _AddProperty(Property newProperty)
 	{
 		if (numProps == MAX_PROPS)
 		{
@@ -235,9 +228,25 @@ namespace properties
 		props[numProps++] = newProperty;
 	}
 
-	void Add(const char* name, const char* valueStr)
+	// @param type Use `Property::Type::Any` if unsure or if the type changes
+	void Addf(const char* name, PropType type, const char* fmt...)
 	{
-		_Add({
+		va_list args;
+		va_start(args, fmt);
+		char* valueStr = Formatted(fmt, args);
+		va_end(args);
+		_AddProperty({
+			.name     = name,
+			.fmt      = nullptr,
+			.value    = valueStr,
+			.type     = type,
+			.usesHeap = true,
+		});
+	}
+
+	void AddString(const char* name, const char* valueStr)
+	{
+		_AddProperty({
 			.name     = name,
 			.fmt      = nullptr,
 			.value    = valueStr,
@@ -245,21 +254,7 @@ namespace properties
 		});
 	}
 
-	void Addf(const char* name, const char* fmt...)
-	{
-		va_list args;
-		va_start(args, fmt);
-		char* value= Formatted(fmt, args);
-		va_end(args);
-		_Add({
-			.name     = name,
-			.fmt      = nullptr,
-			.value    = value,
-			.usesHeap = true,
-		});
-	}
-
-	void _AddLinked(const char* name, const char* fmt, Property::LinkType type, const void* valueSrcPtr)
+	void _AddLinked(const char* name, const char* fmt, PropType type, const void* valueSrcPtr)
 	{
 #if _DEBUG
 		if (!valueSrcPtr || !fmt)
@@ -268,33 +263,33 @@ namespace properties
 			return;
 		}
 #endif
-		_Add({
+		_AddProperty({
 			.name     = name,
 			.fmt      = fmt,
 			.value    = valueSrcPtr,
-			.linkType = type,
+			.type     = type,
 			.usesHeap = false,
 			});
 	}
 
 	void AddLinkedInt(const char* name, const char* fmt, const int* valueSrcPtr)
 	{
-		_AddLinked(name, fmt, Property::LinkType::Int, valueSrcPtr);
+		_AddLinked(name, fmt, PropType::Int, valueSrcPtr);
 	}
 
 	void AddLinkedFloat(const char* name, const char* fmt, const float* valueSrcPtr)
 	{
-		_AddLinked(name, fmt, Property::LinkType::Float, valueSrcPtr);
+		_AddLinked(name, fmt, PropType::Float, valueSrcPtr);
 	}
 
 	void AddLinkedString(const char* name, const char* fmt, const char* const* valueSrcPtr)
 	{
-		_AddLinked(name, fmt, Property::LinkType::String, valueSrcPtr);
+		_AddLinked(name, fmt, PropType::String, valueSrcPtr);
 	}
 
 	void AddHeader(const char* name)
 	{
-		_Add({
+		_AddProperty({
 			.name     = name,
 			.fmt      = nullptr,
 			.value    = nullptr,
@@ -304,21 +299,22 @@ namespace properties
 
 	void AddCloser()
 	{
-		_Add({
+		_AddProperty({
 			.name     = nullptr,
 			.fmt      = nullptr,
 			.value    = nullptr,
-			.usesHeap = false
+			.usesHeap = false,
 		});
 	}
 
 	void AddMultiline(const char* name, const char* valueStr)
 	{
 		AddHeader(name);
-		_Add({
+		_AddProperty({
 			.name     = nullptr,
 			.fmt      = nullptr,
 			.value    = valueStr,
+			.type     = PropType::String,
 			.usesHeap = false
 		});
 		AddCloser();
