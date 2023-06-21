@@ -47,12 +47,14 @@ namespace properties
 
 	constexpr int panelPaddingX = 6;
 	constexpr int panelPaddingY = 4;
+	constexpr int fontSize = 8;
 
 	void DrawPanelContents()
 	{
 		int y = propertiesPanel.bounds.ymin + panel::panelTitlebarHeight + panelPaddingY;
 		int xBaseline = propertiesPanel.bounds.xmin + panelPaddingX;
 		int indent = 0;
+		int halfHeight = fontSize / 2;
 
 		// Pass 1: Names
 		for (size_t i = 0; i < numProps; ++i)
@@ -70,20 +72,22 @@ namespace properties
 			// Regular property
 			else if (prop.name && prop.valueStr)
 			{
-				DrawText(prop.name, x, y, 8, WHITE);
-				DrawText(prop.valueStr, x + dividerX, y, 8, WHITE);
+				DrawText(prop.name, x, y, fontSize, WHITE);
+				DrawText(prop.valueStr, x + dividerX, y, fontSize, WHITE);
 			}
 
 			// Multiline property
 			else if (!prop.name && prop.valueStr)
 			{
-				DrawText(prop.valueStr, x, y, 8, WHITE);
+				DrawText(prop.valueStr, x, y, fontSize, WHITE);
 			}
 
 			// Header
 			else if (prop.name && !prop.valueStr)
 			{
-				DrawText(prop.name, x, y, 8, WHITE);
+				int yMid = y + halfHeight;
+				DrawText(prop.name, x, y, fontSize, WHITE);
+				DrawLine(x + MeasureText(prop.name, fontSize) + panelPaddingX, yMid, propertiesPanel.bounds.xmax - panelPaddingX, yMid, WHITE);
 				indent += indentSize;
 			}
 
