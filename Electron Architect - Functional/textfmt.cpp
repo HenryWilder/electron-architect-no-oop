@@ -44,14 +44,21 @@ char* _Formatted_MinComplexity(const char* _Format, va_list _ArgList)
 	return result;
 }
 
-char* _Formatted_MinComplexity(size_t hintSizeMax, const char* _Format, va_list _ArgList)
+char* _Formatted_MinComplexity_hint(size_t hintSizeMax, const char* _Format, va_list _ArgList)
 {
 	char* result = new char[hintSizeMax];
 	for (size_t i = 0; i < hintSizeMax; ++i)
 	{
 		result[i] = '\0';
 	}
-	vsnprintf(result, hintSizeMax, _Format, _ArgList);
+	int needed = vsnprintf(result, hintSizeMax, _Format, _ArgList);
+
+	// In case of overflow
+	if (needed >= hintSizeMax) [[unlikely]]
+	{
+		console::Errorf("Formatted string overflow: hinted %u characters, needed %u characters", hintSizeMax, needed + 1);
+	}
+
 	return result;
 }
 
@@ -73,6 +80,6 @@ char* FormattedV(const char* _Format, ...)
 
 char* Formatted(size_t hintSizeMax, const char* _Format, va_list _ArgList)
 {
-	char* result = _Formatted_MinComplexity(hintSizeMax, _Format, _ArgList);
+	char* result = _Formatted_MinComplexity_hint(hintSizeMax, _Format, _ArgList);
 	return result;
 }

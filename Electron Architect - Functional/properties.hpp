@@ -21,6 +21,9 @@ namespace properties
     extern size_t showingPropertiesFor;
 
     // Adds a property with formatting
+    void Addf_hint(const char* name, size_t hintSizeMax, PropType type, const char* fmt...);
+
+    // Adds a property with formatting
     void Addf(const char* name, PropType type, const char* fmt...);
 
     // Adds a static, signed integer property
@@ -28,17 +31,32 @@ namespace properties
     {
         properties::Addf(name, PropType::Int, "%i", value);
     }
+    // Adds a static, signed integer property
+    template<std::signed_integral T> void AddInt(const char* name, size_t hintSizeMax, T value)
+    {
+        properties::Addf_hint(name, hintSizeMax, PropType::Int, "%i", value);
+    }
 
     // Adds a static, unsigned integer property
     template<std::unsigned_integral T> void AddInt(const char* name, T value)
     {
         properties::Addf(name, PropType::Int, "%u", value);
     }
+    // Adds a static, unsigned integer property
+    template<std::unsigned_integral T> void AddInt(const char* name, size_t hintSizeMax, T value)
+    {
+        properties::Addf_hint(name, hintSizeMax, PropType::Int, "%u", value);
+    }
 
     // Adds a static float property
     template<std::floating_point T> void AddFloat(const char* name, T value)
     {
         properties::Addf(name, PropType::Float, "%f", value);
+    }
+    // Adds a static float property
+    template<std::floating_point T> void AddFloat(const char* name, size_t hintSizeMax, T value)
+    {
+        properties::Addf_hint(name, hintSizeMax, PropType::Float, "%f", value);
     }
 
     // Adds a static boolean property

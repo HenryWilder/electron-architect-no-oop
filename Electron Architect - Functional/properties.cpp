@@ -265,6 +265,22 @@ namespace properties
 	}
 
 	// @param type Use `Property::Type::Any` if unsure or if the type changes
+	void Addf_hint(const char* name, size_t hintSizeMax, PropType type, const char* fmt...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		char* valueStr = Formatted(hintSizeMax, fmt, args);
+		va_end(args);
+		_AddProperty({
+			.name     = name,
+			.fmt      = nullptr,
+			.value    = valueStr,
+			.type     = type,
+			.usesHeap = true,
+		});
+	}
+
+	// @param type Use `Property::Type::Any` if unsure or if the type changes
 	void Addf(const char* name, PropType type, const char* fmt...)
 	{
 		va_list args;
@@ -317,7 +333,7 @@ namespace properties
 			.value    = valueSrcPtr,
 			.type     = type,
 			.usesHeap = false,
-			});
+		});
 	}
 
 	void AddLinkedInt(const char* name, const char* fmt, const int* valueSrcPtr)
