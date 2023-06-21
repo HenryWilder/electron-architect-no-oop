@@ -68,14 +68,14 @@ namespace properties
 				continue; // Don't iterate property line
 			}
 
-			// Regular property
+			// Regular
 			else if (prop.name && prop.value)
 			{
 				DrawText(prop.name, x, y, fontSize, WHITE);
 				DrawText((const char*)prop.value, x + dividerX, y, fontSize, WHITE);
 			}
 
-			// Multiline property
+			// Multiline
 			else if (!prop.name && prop.value)
 			{
 				DrawText((const char*)prop.value, x, y, fontSize, WHITE);
@@ -97,7 +97,7 @@ namespace properties
 
 			else
 			{
-				console::Error(TextFormat("Undefined situation: name is \"%s\", value is \"%s\"", prop.name && !prop.value));
+				console::Error(TextFormat("Undefined situation: name is \"%s\", value is \"%s\"", prop.name, prop.value));
 			}
 
 			y += lineHeight;
