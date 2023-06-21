@@ -11,18 +11,21 @@ namespace properties
     extern size_t showingPropertiesFor;
 
     // Adds a property
-    void AddProperty(const char* name, const char* valueStr);
+    void Add(const char* name, const char* valueStr);
     // Adds a property with formatting
     // (Warning: uses heap memory)
-    void AddPropertyf(const char* name, const char* fmt...);
+    void Addf(const char* name, const char* fmt...);
     // Indents following properties
-    void AddPropertyHeader(const char* name);
+    void AddHeader(const char* name);
     // Unindents following properties
-    void AddPropertyCloser();
+    void AddCloser();
     // Adds a property whose value takes up multiple lines
     // TODO
-    void AddPropertyMultiline(const char* name, const char* valueStr);
+    void AddMultiline(const char* name, const char* valueStr);
 
     // Clears the properties panel info
-    void ClearProperties();
+    void Clear();
+
+    // Performs any cleanup needed to unload resources associated with this namespace when the program closes
+    void Unload();
 }

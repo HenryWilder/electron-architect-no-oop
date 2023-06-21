@@ -1,5 +1,5 @@
 #include <cstdarg>
-#include <stdio.h>
+#include "textfmt.hpp"
 #include "console.hpp"
 #include "properties.hpp"
 
@@ -55,32 +55,43 @@ namespace properties
 			const Property& prop = props[i];
 			int x = xBaseline + indent;
 
-			if (!prop.name)
+			// Closer
+			if (!prop.name && !prop.valueStr)
 			{
 				indent -= indentSize;
 				continue; // Don't iterate property line
 			}
 
-			if (prop.name)
+			// Regular property
+			else if (prop.name && prop.valueStr)
 			{
 				DrawText(prop.name, x, y, 8, WHITE);
-			}
-
-			if (prop.valueStr)
-			{
 				DrawText(prop.valueStr, x + dividerX, y, 8, WHITE);
 			}
 
-			if (prop.name && !prop.valueStr)
+			// Multiline property
+			else if (!prop.name && prop.valueStr)
 			{
+				DrawText(prop.valueStr, x, y, 8, WHITE);
+			}
+
+			// Header
+			else if (prop.name && !prop.valueStr)
+			{
+				DrawText(prop.name, x, y, 8, WHITE);
 				indent += indentSize;
+			}
+
+			else
+			{
+				console::Error(TextFormat("Undefined situation: name is \"%s\", value is \"%s\"", prop.name && !prop.valueStr));
 			}
 
 			y += lineHeight;
 		}
 	}
 
-	void _AddProperty(Property newProperty)
+	void _Add(Property newProperty)
 	{
 		if (numProps == MAX_PROPS)
 		{
@@ -91,80 +102,55 @@ namespace properties
 		props[numProps++] = newProperty;
 	}
 
-	// Creates a string using memory from the heap - Remember to free when done using
-	char* _NewFormattedProperty(const char* _Format, va_list _ArgList)
+	void Add(const char* name, const char* valueStr)
 	{
-		constexpr size_t BUFFER_MAX_SIZE = 1024;
-		char staticBuff[BUFFER_MAX_SIZE] = {};
-		for (size_t i = 0; i < BUFFER_MAX_SIZE; ++i)
-		{
-			staticBuff[i] = '\0';
-		}
-		vsnprintf(staticBuff, BUFFER_MAX_SIZE, _Format, _ArgList);
-		size_t buffer_used_size = 0;
-		for (char ch : staticBuff)
-		{
-			++buffer_used_size; // Before `if` because the null terminator also needs to be included in the overhead
-			if (ch == '\0')
-			{
-				break;
-			}
-		}
-		char* valueStr = new char[buffer_used_size];
-		for (size_t i = 0; i < buffer_used_size; ++i)
-		{
-			valueStr[i] = staticBuff[i];
-		}
-		console::Group("Allocated string memory from the heap:");
-		console::Log(valueStr);
-		console::GroupEnd();
-		return valueStr;
+		_Add({ name, valueStr, false });
 	}
 
-	void AddProperty(const char* name, const char* valueStr)
-	{
-		_AddProperty({ name, valueStr, false });
-	}
-
-	void AddPropertyf(const char* name, const char* fmt...)
+	void Addf(const char* name, const char* fmt...)
 	{
 		va_list args;
 		va_start(args, fmt);
-		char* valueStr = _NewFormattedProperty(fmt, args);
+		char* valueStr = Formatted(fmt, args);
 		va_end(args);
-		_AddProperty({ name, valueStr, true});
+		_Add({ name, valueStr, true});
 	}
 
-	void AddPropertyHeader(const char* name)
+	void AddHeader(const char* name)
 	{
-		_AddProperty({ name, nullptr, false });
+		_Add({ name, nullptr, false });
 	}
 
-	void AddPropertyCloser()
+	void AddCloser()
 	{
-		_AddProperty({ nullptr, nullptr, false });
+		_Add({ nullptr, nullptr, false });
 	}
 
-	void AddPropertyMultiline(const char* name, const char* valueStr)
+	void AddMultiline(const char* name, const char* valueStr)
 	{
-		AddPropertyHeader(name);
-		_AddProperty({ nullptr, valueStr, false });
-		AddPropertyCloser();
+		AddHeader(name);
+		_Add({ nullptr, valueStr, false });
+		AddCloser();
 	}
 
-	void ClearProperties()
+	void Clear()
 	{
 		for (Property& prop : props)
 		{
 			if (prop.usesHeap)
 			{
-				delete prop.valueStr;
+				delete[] prop.valueStr;
 #if _DEBUG
-				prop.valueStr = "[USING DELETED MEMORY]";
+				prop.valueStr = "[properties: READING DELETED MEMORY]";
 				prop.usesHeap = false;
 #endif
 			}
 		}
 		numProps = 0;
+	}
+
+	void Unload()
+	{
+		Clear();
 	}
 }

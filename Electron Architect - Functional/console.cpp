@@ -1,9 +1,11 @@
+#include <cstdarg>
 #include <raylib.h>
 #include <raymath.h>
 extern "C"
 {
 #include "logtypes.h"
 }
+#include "textfmt.hpp"
 #include "console.hpp"
 #pragma warning( push )
 #pragma warning( disable : 26812 )
@@ -33,12 +35,18 @@ namespace console
 
 	struct LogElement
 	{
+		// Element styling
 		LogType type = LogType::LOGTYPE_NORMAL;
+		// Should always set this
+		const char* content = nullptr;
+		// Indentation of the log
 		size_t indent = 0;
-		const char* content = ""; // Should always set this
+		// Number of duplicate logs being compressed into this
 		size_t count = 1;
 		// The time this element was last hovered (used for animated fade)
 		double lastHovered = 0.0;
+		// Whether the log content is heap memory and needs to be freed before overwriting or closing the program
+		bool contentUsesHeap = false;
 	};
 
 	constexpr int lineHeight = 16;
@@ -165,7 +173,7 @@ namespace console
 		return true;
 	}
 
-	void AppendLog(LogType type, const char* text)
+	void AppendLog(LogType type, const char* text, bool usesHeap = false)
 	{
 		if (totalLogs != 0) [[likely]] // Happens for all log-appends following the first after the console is cleared.
 		{
@@ -186,6 +194,19 @@ namespace console
 		}
 		else
 		{
+			// `droppedLog` is only valid in this context. 
+			// It is going to be overwritten immediately in the first loop iteration.
+			{
+				LogElement& droppedLog = logs[0];
+				if (droppedLog.contentUsesHeap)
+				{
+					delete[] droppedLog.content;
+#if _DEBUG
+					droppedLog.content = "[console: READING DELETED MEMORY]";
+#endif
+				}
+			}
+
 			for (size_t i = 1; i < totalLogs; ++i)
 			{
 				logs[i - 1] = logs[i];
@@ -193,16 +214,26 @@ namespace console
 		}
 
 		logs[totalLogs - 1] = {
-			type,
-			currentIndent,
-			text,
-			1,
-			GetTime(), // Creation is also be treated as hover (for stylistic reasons)
+			.type = type,
+			.content = text,
+			.indent = currentIndent,
+			.count = 1,
+			.lastHovered = GetTime(), // Creation is also be treated as hover (for stylistic reasons)
+			.contentUsesHeap = usesHeap,
 		};
 	}
 
 	void Log(const char* text)
 	{
+		AppendLog(LOGTYPE_NORMAL, text);
+	}
+
+	void Log(const char* fmt...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		char* text = Formatted(fmt, args);
+		va_end(args);
 		AppendLog(LOGTYPE_NORMAL, text);
 	}
 
@@ -237,8 +268,25 @@ namespace console
 
 	void Clear()
 	{
+		for (size_t i = 0; i < totalLogs; ++i)
+		{
+			LogElement& log = logs[i];
+			if (log.contentUsesHeap)
+			{
+				delete[] log.content;
+				log.contentUsesHeap = false;
+#if _DEBUG
+				log.content = "[console: READING DELETED MEMORY]";
+#endif
+			}
+		}
 		totalLogs = 0;
 		currentIndent = 0;
+	}
+
+	void Unload()
+	{
+		Clear();
 	}
 }
 

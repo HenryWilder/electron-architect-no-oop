@@ -43,26 +43,26 @@ int main()
     console::Assert(false, "Hello");
     console::Assert(false, "Hello");
 
-    properties::AddProperty("Int 1", "55234");
-    properties::AddProperty("Long long 1", "23542346434534");
-    properties::AddProperty("Float 1", "243.34782");
-    properties::AddProperty("Double 1", "453.93332384");
-    properties::AddPropertyHeader("Collection 1");
-    properties::AddProperty("Int 2", "56435");
-    properties::AddProperty("Long long 2", "67574563653463");
-    properties::AddProperty("Float 2", "453.63534");
-    properties::AddProperty("Double 2", "343423.4578975757364563");
-    properties::AddPropertyCloser();
-    properties::AddPropertyHeader("Collection 2");
-    properties::AddProperty("Int 3", "48325");
-    properties::AddProperty("Long long 3", "6372795382473892");
-    properties::AddProperty("Float 3", "534.34782");
-    properties::AddProperty("Double 3", "23462.74567246573456");
-    properties::AddPropertyHeader("Collection 2.1");
-    properties::AddProperty("Hello", ":3");
-    properties::AddPropertyf("Formatted", "0x%06x", 543634);
-    properties::AddPropertyCloser();
-    properties::AddPropertyCloser();
+    properties::Add("Int 1", "55234");
+    properties::Add("Long long 1", "23542346434534");
+    properties::Add("Float 1", "243.34782");
+    properties::Add("Double 1", "453.93332384");
+    properties::AddHeader("Collection 1");
+    properties::Add("Int 2", "56435");
+    properties::Add("Long long 2", "67574563653463");
+    properties::Add("Float 2", "453.63534");
+    properties::Add("Double 2", "343423.4578975757364563");
+    properties::AddCloser();
+    properties::AddHeader("Collection 2");
+    properties::Add("Int 3", "48325");
+    properties::Add("Long long 3", "6372795382473892");
+    properties::Add("Float 3", "534.34782");
+    properties::Add("Double 3", "23462.74567246573456");
+    properties::AddHeader("Collection 2.1");
+    properties::Add("Hello", ":3");
+    properties::Addf("Formatted", "0x%06x", 543634);
+    properties::AddCloser();
+    properties::AddCloser();
 #endif
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
@@ -205,6 +205,9 @@ int main()
     }
 
     CloseWindow();
+
+    properties::Clear();
+    console::Clear();
 
 	return 0;
 }

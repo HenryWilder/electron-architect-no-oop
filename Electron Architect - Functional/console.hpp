@@ -20,4 +20,7 @@ namespace console
 	void Group(const char* groupName);
 	void GroupEnd();
 	void Clear();
+
+	// Performs any cleanup needed to unload resources associated with this namespace when the program closes
+	void Unload();
 }
