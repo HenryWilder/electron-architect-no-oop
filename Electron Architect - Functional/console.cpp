@@ -46,6 +46,8 @@ namespace console
 		// The time this element was last hovered (used for animated fade)
 		double lastHovered = 0.0;
 		// Whether the log content is heap memory and needs to be freed before overwriting or closing the program
+		// Technically, it just means whether it is the console's duty to free it.
+		// Heap memory may still be passed in; but if it wasn't allocated by the console, it won't be freed by the console.
 		bool contentUsesHeap = false;
 	};
 
@@ -173,7 +175,7 @@ namespace console
 		return true;
 	}
 
-	void AppendLog(LogType type, const char* text, bool usesHeap = false)
+	void AppendLog(LogType type, const char* text, bool usesHeap)
 	{
 		if (totalLogs != 0) [[likely]] // Happens for all log-appends following the first after the console is cleared.
 		{
@@ -223,9 +225,10 @@ namespace console
 		};
 	}
 
+	// Do NOT use this if `text` uses heap memory and you aren't freeing it yourself!
 	void Log(const char* text)
 	{
-		AppendLog(LOGTYPE_NORMAL, text);
+		AppendLog(LOGTYPE_NORMAL, text, false);
 	}
 
 	void Log(const char* fmt...)
@@ -234,30 +237,63 @@ namespace console
 		va_start(args, fmt);
 		char* text = Formatted(fmt, args);
 		va_end(args);
-		AppendLog(LOGTYPE_NORMAL, text);
+		AppendLog(LOGTYPE_NORMAL, text, true);
 	}
 
+	// Do NOT use this if `text` uses heap memory and you aren't freeing it yourself!
 	void Warn(const char* text)
 	{
-		AppendLog(LOGTYPE_WARNING, text);
+		AppendLog(LOGTYPE_WARNING, text, false);
 	}
 
+	void Warn(const char* fmt...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		char* text = Formatted(fmt, args);
+		va_end(args);
+		AppendLog(LOGTYPE_WARNING, text, true);
+	}
+
+	// Do NOT use this if `text` uses heap memory and you aren't freeing it yourself!
 	void Error(const char* text)
 	{
-		AppendLog(LOGTYPE_ERROR, text);
+		AppendLog(LOGTYPE_ERROR, text, false);
 	}
 
+	void Error(const char* fmt...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		char* text = Formatted(fmt, args);
+		va_end(args);
+		AppendLog(LOGTYPE_ERROR, text, true);
+	}
+
+	// Do NOT use this if `text` uses heap memory and you aren't freeing it yourself!
 	void Assert(bool condition, const char * text)
 	{
 		if (!condition)
 		{
-			AppendLog(LOGTYPE_FAILED_ASSERTION, text);
+			AppendLog(LOGTYPE_FAILED_ASSERTION, text, false);
+		}
+	}
+
+	void Assert(bool condition, const char* fmt...)
+	{
+		if (!condition)
+		{
+			va_list args;
+			va_start(args, fmt);
+			char* text = Formatted(fmt, args);
+			va_end(args);
+			AppendLog(LOGTYPE_FAILED_ASSERTION, text, true);
 		}
 	}
 
 	void Group(const char* groupName)
 	{
-		AppendLog(LOGTYPE_NORMAL, groupName);
+		AppendLog(LOGTYPE_NORMAL, groupName, false);
 		++currentIndent;
 	}
 
