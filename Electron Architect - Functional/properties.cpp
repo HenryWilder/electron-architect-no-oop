@@ -1,3 +1,5 @@
+#include <cstdarg>
+#include <stdio.h>
 #include "console.hpp"
 #include "properties.hpp"
 
@@ -89,9 +91,48 @@ namespace properties
 		props[numProps++] = newProperty;
 	}
 
+	// Creates a string using memory from the heap - Remember to free when done using
+	char* _NewFormattedProperty(const char* _Format, va_list _ArgList)
+	{
+		constexpr size_t BUFFER_MAX_SIZE = 1024;
+		char staticBuff[BUFFER_MAX_SIZE] = {};
+		for (size_t i = 0; i < BUFFER_MAX_SIZE; ++i)
+		{
+			staticBuff[i] = '\0';
+		}
+		vsnprintf(staticBuff, BUFFER_MAX_SIZE, _Format, _ArgList);
+		size_t buffer_used_size = 0;
+		for (char ch : staticBuff)
+		{
+			++buffer_used_size; // Before `if` because the null terminator also needs to be included in the overhead
+			if (ch == '\0')
+			{
+				break;
+			}
+		}
+		char* valueStr = new char[buffer_used_size];
+		for (size_t i = 0; i < buffer_used_size; ++i)
+		{
+			valueStr[i] = staticBuff[i];
+		}
+		console::Group("Allocated string memory from the heap:");
+		console::Log(valueStr);
+		console::GroupEnd();
+		return valueStr;
+	}
+
 	void AddProperty(const char* name, const char* valueStr)
 	{
 		_AddProperty({ name, valueStr, false });
+	}
+
+	void AddPropertyf(const char* name, const char* fmt...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		char* valueStr = _NewFormattedProperty(fmt, args);
+		va_end(args);
+		_AddProperty({ name, valueStr, true});
 	}
 
 	void AddPropertyHeader(const char* name)
@@ -102,6 +143,13 @@ namespace properties
 	void AddPropertyCloser()
 	{
 		_AddProperty({ nullptr, nullptr, false });
+	}
+
+	void AddPropertyMultiline(const char* name, const char* valueStr)
+	{
+		AddPropertyHeader(name);
+		_AddProperty({ nullptr, valueStr, false });
+		AddPropertyCloser();
 	}
 
 	void ClearProperties()

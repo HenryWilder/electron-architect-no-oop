@@ -14,11 +14,14 @@ namespace properties
     void AddProperty(const char* name, const char* valueStr);
     // Adds a property with formatting
     // (Warning: uses heap memory)
-    void AddProperty(const char* name, const char* fmt, const char* valueStr);
+    void AddPropertyf(const char* name, const char* fmt...);
     // Indents following properties
     void AddPropertyHeader(const char* name);
     // Unindents following properties
     void AddPropertyCloser();
+    // Adds a property whose value takes up multiple lines
+    // TODO
+    void AddPropertyMultiline(const char* name, const char* valueStr);
 
     // Clears the properties panel info
     void ClearProperties();

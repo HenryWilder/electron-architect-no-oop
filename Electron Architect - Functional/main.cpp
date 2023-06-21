@@ -60,6 +60,7 @@ int main()
     properties::AddProperty("Double 3", "23462.74567246573456");
     properties::AddPropertyHeader("Collection 2.1");
     properties::AddProperty("Hello", ":3");
+    properties::AddPropertyf("Formatted", "0x%06x", 543634);
     properties::AddPropertyCloser();
     properties::AddPropertyCloser();
 #endif
