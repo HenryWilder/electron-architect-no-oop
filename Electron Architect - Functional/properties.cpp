@@ -137,7 +137,7 @@ namespace properties
 
 				if (isHovering && isDrawable)
 				{
-					DrawRectangle(x - 3, y - 2, xMax - x, yNext - y - 3, accentColor);
+					DrawRectangle(x - 3, y - 2, (xMax - x) + 3, yNext - y - 3, accentColor);
 				}
 			}
 
