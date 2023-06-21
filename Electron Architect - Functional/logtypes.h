@@ -7,6 +7,7 @@ typedef enum LogType
 	LOGTYPE_WARNING,
 	LOGTYPE_ERROR,
 	LOGTYPE_FAILED_ASSERTION,
+	LOGTYPE_GROUP,
 
 	// Helper for tracking the number of log types
 	_LOGTYPE_NUM_TYPES

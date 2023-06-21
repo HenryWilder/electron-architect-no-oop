@@ -293,7 +293,7 @@ namespace console
 
 	void Group(const char* groupName)
 	{
-		AppendLog(LOGTYPE_NORMAL, groupName, false);
+		AppendLog(LOGTYPE_GROUP, groupName, false);
 		++currentIndent;
 	}
 
