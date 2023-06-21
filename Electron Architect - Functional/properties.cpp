@@ -126,6 +126,33 @@ namespace properties
 				continue;
 			}
 
+			Color color = accentColor;
+			if (type == TYPE_REGULAR)
+			{
+				switch (prop.type)
+				{
+				case PropType::Int:
+					color = typeColor_Int;
+					break;
+
+				case PropType::Float:
+					color = typeColor_Float;
+					break;
+
+				case PropType::String:
+					color = typeColor_String;
+					break;
+
+				case PropType::Bool:
+					color = typeColor_Bool;
+					break;
+
+				case PropType::Any:
+					color = typeColor_Any;
+					break;
+				}
+			}
+
 			if (allowHover)
 			{
 
@@ -135,7 +162,7 @@ namespace properties
 
 				if (isHovering && isDrawable)
 				{
-					DrawRectangle(x - 3, y - 2, (xMax - x) + 3, yNext - y - 3, accentColor);
+					DrawRectangle(x - 3, y - 2, (xMax - x) + 3, yNext - y - 3, color);
 				}
 			}
 
@@ -144,32 +171,6 @@ namespace properties
 				if (prop.nameWidth == -1) [[unlikely]]
 				{
 					props[i].nameWidth = MeasureText(prop.name, fontSize);
-				}
-				Color color = accentColor;
-				if (type == TYPE_REGULAR)
-				{
-					switch (prop.type)
-					{
-					case PropType::Int:
-						color = typeColor_Int;
-						break;
-
-					case PropType::Float:
-						color = typeColor_Float;
-						break;
-
-					case PropType::String:
-						color = typeColor_String;
-						break;
-
-					case PropType::Bool:
-						color = typeColor_Bool;
-						break;
-
-					case PropType::Any:
-						color = typeColor_Any;
-						break;
-					}
 				}
 				DrawRectangle(x - 3, y - 2, prop.nameWidth + 6, fontSize + 5, color);
 			}
