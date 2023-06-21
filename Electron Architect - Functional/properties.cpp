@@ -78,14 +78,16 @@ namespace properties
 		return numLines;
 	}
 
-	void DrawPanelContents()
+	void DrawPanelContents(int mousex, int mousey, bool allowHover)
 	{
 		int y          = propertiesPanel.bounds.ymin + panel::panelTitlebarHeight + panelPaddingY;
 		int xBaseline  = propertiesPanel.bounds.xmin + panelPaddingX;
+		int xMax       = propertiesPanel.bounds.xmax - panelPaddingX;
 		int indent     = 0;
 		int halfHeight = fontSize / 2;
 
-		// Pass 1: Names
+		constexpr Color accentColor = { 255,255,255, 32 };
+
 		for (size_t i = 0; i < numProps; ++i)
 		{
 			if (y > propertiesPanel.bounds.ymax)
@@ -105,91 +107,6 @@ namespace properties
 				TYPE_REGULAR   = (char)(0b11),
 			};
 
-			bool isDrawSkippable = x > propertiesPanel.bounds.xmax && type != TYPE_CLOSER;
-
-			if (!isDrawSkippable)
-			{
-				if (prop.name)
-				{
-					if (prop.nameWidth == -1) [[unlikely]]
-					{
-						props[i].nameWidth = MeasureText(prop.name, fontSize);
-					}
-					DrawRectangle(x - 3, y - 2, prop.nameWidth + 6, fontSize + 5, { 255,255,255, 32 });
-				}
-
-				switch (type)
-				{
-				case TYPE_CLOSER: {
-					indent -= indentSize;
-					{
-						int xStart = x - indentSize;
-						int xEnd = propertiesPanel.bounds.xmax - panelPaddingX;
-						if (xEnd >= xStart)
-						{
-							DrawLine(xStart, y, xEnd, y, WHITE);
-						}
-					}
-				} break;
-
-				case TYPE_MULTILINE: {
-					DrawText((const char*)prop.value, x, y, fontSize, WHITE);
-					int numLines = 1;
-					char ch = '\0';
-					for (const char* str = (const char*)prop.value; (ch = *str) != '\0'; ++str)
-					{
-						numLines += (int)(ch == '\n');
-					}
-				} break;
-
-				case TYPE_HEADER: {
-					DrawText(prop.name, x, y, fontSize, WHITE);
-					{
-						int xStart = x + MeasureText(prop.name, fontSize) + panelPaddingX;
-						int xEnd = propertiesPanel.bounds.xmax - panelPaddingX;
-						if (xEnd >= xStart)
-						{
-							int yMid = y + halfHeight;
-							DrawLine(xStart, yMid, xEnd, yMid, WHITE);
-						}
-					}
-					indent += indentSize;
-				} break;
-
-				case TYPE_REGULAR: {
-					const char* valueStr = "";
-					if (!prop.fmt)
-					{
-						valueStr = (const char*)prop.value;
-					}
-					else
-					{
-						switch (prop.linkType)
-						{
-						case Property::LinkType::Int:
-							valueStr = TextFormat(prop.fmt, *(const int*)prop.value);
-							break;
-
-						case Property::LinkType::Float:
-							valueStr = TextFormat(prop.fmt, *(const float*)prop.value);
-							break;
-
-						case Property::LinkType::String:
-							valueStr = TextFormat(prop.fmt, *(const char* const*)prop.value);
-							break;
-						}
-					}
-					DrawText(prop.name, x, y, fontSize, WHITE);
-					DrawText(valueStr, x + dividerX, y, fontSize, WHITE);
-				} break;
-
-				default: {
-					console::Errorf("Type number was %i. Expected a number within [0b00..0b11] ([0..3])", type);
-				}
-
-				}
-			}
-
 			int numLines = 1;
 			if (prop.value && !prop.fmt)
 			{
@@ -199,7 +116,111 @@ namespace properties
 			{
 				numLines = CountNewlines(*(const char* const*)prop.value);
 			}
-			y += lineHeight * numLines;
+			int yNext = y + lineHeight * numLines;
+
+			bool isDrawable = type != TYPE_CLOSER;
+
+			bool isDrawSkippable = x > xMax && isDrawable;
+
+			if (isDrawSkippable)
+			{
+				y = yNext;
+				continue;
+			}
+
+			if (allowHover)
+			{
+
+				bool isHovering =
+					x <= mousex && mousex <= xMax &&
+					y <= mousey && mousey < yNext;
+
+				if (isHovering && isDrawable)
+				{
+					DrawRectangle(x - 3, y - 2, xMax - x, yNext - y - 3, accentColor);
+				}
+			}
+
+			if (prop.name)
+			{
+				if (prop.nameWidth == -1) [[unlikely]]
+				{
+					props[i].nameWidth = MeasureText(prop.name, fontSize);
+				}
+				DrawRectangle(x - 3, y - 2, prop.nameWidth + 6, fontSize + 5, accentColor);
+			}
+
+			switch (type)
+			{
+			case TYPE_CLOSER: {
+				indent -= indentSize;
+				{
+					int xStart = x - indentSize;
+					int xEnd = xMax;
+					if (xEnd >= xStart)
+					{
+						DrawLine(xStart, y, xEnd, y, accentColor);
+					}
+				}
+			} break;
+
+			case TYPE_MULTILINE: {
+				DrawText((const char*)prop.value, x, y, fontSize, WHITE);
+				int numLines = 1;
+				char ch = '\0';
+				for (const char* str = (const char*)prop.value; (ch = *str) != '\0'; ++str)
+				{
+					numLines += (int)(ch == '\n');
+				}
+			} break;
+
+			case TYPE_HEADER: {
+				DrawText(prop.name, x, y, fontSize, WHITE);
+				{
+					int xStart = x + MeasureText(prop.name, fontSize) + 6;
+					int xEnd = xMax;
+					if (xEnd >= xStart)
+					{
+						int yMid = y + halfHeight;
+						DrawLine(xStart, yMid, xEnd, yMid, accentColor);
+					}
+				}
+				indent += indentSize;
+			} break;
+
+			case TYPE_REGULAR: {
+				const char* valueStr = "";
+				if (!prop.fmt)
+				{
+					valueStr = (const char*)prop.value;
+				}
+				else
+				{
+					switch (prop.linkType)
+					{
+					case Property::LinkType::Int:
+						valueStr = TextFormat(prop.fmt, *(const int*)prop.value);
+						break;
+
+					case Property::LinkType::Float:
+						valueStr = TextFormat(prop.fmt, *(const float*)prop.value);
+						break;
+
+					case Property::LinkType::String:
+						valueStr = TextFormat(prop.fmt, *(const char* const*)prop.value);
+						break;
+					}
+				}
+				DrawText(prop.name, x, y, fontSize, WHITE);
+				DrawText(valueStr, x + dividerX, y, fontSize, WHITE);
+			} break;
+
+			default: {
+				console::Errorf("Type number was %i. Expected a number within [0b00..0b11] ([0..3])", type);
+			}
+
+			}
+			y = yNext;
 		}
 	}
 
@@ -238,7 +259,7 @@ namespace properties
 		});
 	}
 
-	void AddLinkedInt(const char* name, const char* fmt, const int* valueSrcPtr)
+	void _AddLinked(const char* name, const char* fmt, Property::LinkType type, const void* valueSrcPtr)
 	{
 #if _DEBUG
 		if (!valueSrcPtr || !fmt)
@@ -251,9 +272,24 @@ namespace properties
 			.name     = name,
 			.fmt      = fmt,
 			.value    = valueSrcPtr,
-			.linkType = Property::LinkType::Int,
+			.linkType = type,
 			.usesHeap = false,
 			});
+	}
+
+	void AddLinkedInt(const char* name, const char* fmt, const int* valueSrcPtr)
+	{
+		_AddLinked(name, fmt, Property::LinkType::Int, valueSrcPtr);
+	}
+
+	void AddLinkedFloat(const char* name, const char* fmt, const float* valueSrcPtr)
+	{
+		_AddLinked(name, fmt, Property::LinkType::Float, valueSrcPtr);
+	}
+
+	void AddLinkedString(const char* name, const char* fmt, const char* const* valueSrcPtr)
+	{
+		_AddLinked(name, fmt, Property::LinkType::String, valueSrcPtr);
 	}
 
 	void AddHeader(const char* name)

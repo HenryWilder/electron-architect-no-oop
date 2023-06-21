@@ -31,6 +31,7 @@ int main()
     console::CalculateDisplayableLogCount(); // Call at beginning so that panels don't need to move to "activate" the console
 
     int testNumber = 5;
+    const char* testString = "apple";
 
 #if _DEBUG // Testing
     console::Log("Test log 1");
@@ -41,7 +42,6 @@ int main()
     console::Warn("Test warning 2");
     console::Error("Test error 2");
     console::GroupEnd();
-
     console::Assert(false, "Hello");
     console::Assert(false, "Hello");
 
@@ -66,6 +66,7 @@ int main()
     properties::Add("Multiline A", "Apple\nOrange\nBanana");
     properties::AddMultiline("Multiline B", "Apple\nOrange\nBanana");
     properties::AddLinkedInt("Linked", "%i", &testNumber);
+    properties::AddLinkedString("Side of screen", "%s", &testString);
     properties::AddCloser();
     properties::AddCloser();
 #endif
@@ -107,6 +108,7 @@ int main()
         int mouseCurrX{ GetMouseX() }, mouseCurrY{ GetMouseY() };
         int mouseDltaX{ mouseCurrX - mousePrevX }, mouseDltaY{ mouseCurrY - mousePrevY };
 
+        testString = (mouseCurrX < (windowWidth / 2)) ? "Left" : "Right";
         testNumber = GetRandomValue(0,9999);
 
         if (currentlyDragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
@@ -184,7 +186,7 @@ int main()
                 }
                 else if (currentPanel == &properties::propertiesPanel)
                 {
-                    properties::DrawPanelContents();
+                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled);
                 }
                 else if (currentPanel == &graph::graphPanel)
                 {
