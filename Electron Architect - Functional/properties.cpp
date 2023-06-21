@@ -48,6 +48,17 @@ namespace properties
 	constexpr int panelPaddingY = 4;
 	constexpr int fontSize      = 8;
 
+	int CountNewlines(const char* str)
+	{
+		int numLines = 1;
+		char ch = '\0';
+		for (; (ch = *str) != '\0'; ++str)
+		{
+			numLines += (int)(ch == '\n');
+		}
+		return numLines;
+	}
+
 	void DrawPanelContents()
 	{
 		int y          = propertiesPanel.bounds.ymin + panel::panelTitlebarHeight + panelPaddingY;
@@ -58,49 +69,75 @@ namespace properties
 		// Pass 1: Names
 		for (size_t i = 0; i < numProps; ++i)
 		{
+			if (y > propertiesPanel.bounds.ymax)
+			{
+				break;
+			}
+
 			const Property& prop = props[i];
 			int x = xBaseline + indent;
 
-			// Closer
-			if (!prop.name && !prop.value)
-			{
-				indent -= indentSize;
-				continue; // Don't iterate property line
-			}
+			char type = ((!!prop.name) << 1) | (!!prop.value);
 
-			// Regular
-			else if (prop.name && prop.value)
-			{
-				DrawText(prop.name, x, y, fontSize, WHITE);
-				DrawText((const char*)prop.value, x + dividerX, y, fontSize, WHITE);
-			}
+			enum PropertyType : char {
+				TYPE_CLOSER    = (char)(0b00),
+				TYPE_MULTILINE = (char)(0b01),
+				TYPE_HEADER    = (char)(0b10),
+				TYPE_REGULAR   = (char)(0b11),
+			};
 
-			// Multiline
-			else if (!prop.name && prop.value)
-			{
-				DrawText((const char*)prop.value, x, y, fontSize, WHITE);
-			}
+			bool isDrawSkippable = x > propertiesPanel.bounds.xmax && type != TYPE_CLOSER;
 
-			// Header
-			else if (prop.name && !prop.value)
+			if (!isDrawSkippable)
 			{
-				int yMid = y + halfHeight;
-				DrawText(prop.name, x, y, fontSize, WHITE);
-				int xStart = x + MeasureText(prop.name, fontSize) + panelPaddingX;
-				int xEnd = propertiesPanel.bounds.xmax - panelPaddingX;
-				if (xEnd >= xStart)
+				switch (type)
 				{
-					DrawLine(xStart, yMid, xEnd, yMid, WHITE);
+				case TYPE_CLOSER: {
+					indent -= indentSize;
+				} break;
+
+				case TYPE_MULTILINE: {
+					DrawText((const char*)prop.value, x, y, fontSize, WHITE);
+					int numLines = 1;
+					char ch = '\0';
+					for (const char* str = (const char*)prop.value; (ch = *str) != '\0'; ++str)
+					{
+						numLines += (int)(ch == '\n');
+					}
+				} break;
+
+				case TYPE_HEADER: {
+					DrawText(prop.name, x, y, fontSize, WHITE);
+					{
+						int xStart = x + MeasureText(prop.name, fontSize) + panelPaddingX;
+						int xEnd = propertiesPanel.bounds.xmax - panelPaddingX;
+						if (xEnd >= xStart)
+						{
+							int yMid = y + halfHeight;
+							DrawLine(xStart, yMid, xEnd, yMid, WHITE);
+						}
+					}
+					indent += indentSize;
+				} break;
+
+				case TYPE_REGULAR: {
+					DrawText(prop.name, x, y, fontSize, WHITE);
+					DrawText((const char*)prop.value, x + dividerX, y, fontSize, WHITE);
+				} break;
+
+				default: {
+					console::Errorf("Type number was %i. Expected a number within [0b00..0b11] ([0..3])", type);
 				}
-				indent += indentSize;
+
+				}
 			}
 
-			else
+			int numLines = (type != TYPE_CLOSER) ? 1 : 0;
+			if (prop.value)
 			{
-				console::Error(TextFormat("Undefined situation: name is \"%s\", value is \"%s\"", prop.name, prop.value));
+				numLines = CountNewlines((const char*)prop.value);
 			}
-
-			y += lineHeight;
+			y += lineHeight * numLines;
 		}
 	}
 

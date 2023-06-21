@@ -231,7 +231,7 @@ namespace console
 		AppendLog(LOGTYPE_NORMAL, text, false);
 	}
 
-	void Log(const char* fmt...)
+	void Logf(const char* fmt...)
 	{
 		va_list args;
 		va_start(args, fmt);
@@ -246,7 +246,7 @@ namespace console
 		AppendLog(LOGTYPE_WARNING, text, false);
 	}
 
-	void Warn(const char* fmt...)
+	void Warnf(const char* fmt...)
 	{
 		va_list args;
 		va_start(args, fmt);
@@ -261,7 +261,7 @@ namespace console
 		AppendLog(LOGTYPE_ERROR, text, false);
 	}
 
-	void Error(const char* fmt...)
+	void Errorf(const char* fmt...)
 	{
 		va_list args;
 		va_start(args, fmt);
@@ -279,7 +279,7 @@ namespace console
 		}
 	}
 
-	void Assert(bool condition, const char* fmt...)
+	void Assertf(bool condition, const char* fmt...)
 	{
 		if (!condition)
 		{

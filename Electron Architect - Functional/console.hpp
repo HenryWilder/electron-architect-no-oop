@@ -13,12 +13,21 @@ namespace console
 
 	void DrawPanelContents(int mousex, int mousey, bool allowHover);
 
-	void Log  (const char* text);
-	void Warn (const char* text);
-	void Error(const char* text);
-	void Assert(bool condition, const char* text);
+	void Log    (const char* text);
+	void Logf   (const char* fmt...);
+
+	void Warn   (const char* text);
+	void Warnf  (const char* fmt...);
+
+	void Error  (const char* text);
+	void Errorf (const char* fmt...);
+
+	void Assert (bool condition, const char* text);
+	void Assertf(bool condition, const char* fmt...);
+
 	void Group(const char* groupName);
 	void GroupEnd();
+
 	void Clear();
 
 	// Performs any cleanup needed to unload resources associated with this namespace when the program closes
