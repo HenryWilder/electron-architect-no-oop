@@ -12,13 +12,21 @@ namespace properties
 
     // Adds a property
     void Add(const char* name, const char* valueStr);
+
     // Adds a property with formatting
     // (Warning: uses heap memory)
     void Addf(const char* name, const char* fmt...);
+
+    // Adds a linked property with formatting
+    // (Warning: expensive; refreshes formatting every frame!)
+    void AddLinkedInt(const char* name, const char* fmt, const int* valueSrcPtr);
+
     // Indents following properties
     void AddHeader(const char* name);
+
     // Unindents following properties
     void AddCloser();
+
     // Adds a property whose value takes up multiple lines
     // TODO
     void AddMultiline(const char* name, const char* valueStr);

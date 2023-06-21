@@ -30,6 +30,8 @@ int main()
 
     console::CalculateDisplayableLogCount(); // Call at beginning so that panels don't need to move to "activate" the console
 
+    int testNumber = 5;
+
 #if _DEBUG // Testing
     console::Log("Test log 1");
     console::Warn("Test warning 1");
@@ -61,6 +63,9 @@ int main()
     properties::AddHeader("Collection 2.1");
     properties::Add("Hello", ":3");
     properties::Addf("Formatted", "0x%06x", 543634);
+    properties::Add("Multiline A", "Apple\nOrange\nBanana");
+    properties::AddMultiline("Multiline B", "Apple\nOrange\nBanana");
+    properties::AddLinkedInt("Linked", "%i", &testNumber);
     properties::AddCloser();
     properties::AddCloser();
 #endif
@@ -101,6 +106,8 @@ int main()
 
         int mouseCurrX{ GetMouseX() }, mouseCurrY{ GetMouseY() };
         int mouseDltaX{ mouseCurrX - mousePrevX }, mouseDltaY{ mouseCurrY - mousePrevY };
+
+        testNumber = GetRandomValue(0,9999);
 
         if (currentlyDragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {

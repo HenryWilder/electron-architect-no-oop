@@ -22,9 +22,28 @@ namespace properties
 	// If both name and valueStr are nullptr, this is a closer.
 	struct Property
 	{
-		const char* name  = nullptr;
-		const char* fmt   = nullptr;
-		const void* value = nullptr; // Assumed to be a c-string when fmt is null. Otherwise, assumed to be a pointer to a value specified by the format
+		enum class LinkType
+		{
+			Int,
+			Float,
+			String,
+		};
+
+		// The name of the property
+		const char* name = nullptr;
+
+		// Format - Only use when value is a pointer to a value and not a value
+		const char* fmt = nullptr;
+
+		// Assumed to be a c-string when fmt is null. Otherwise, assumed to be a pointer to a value specified by the format.
+		// ! Should NEVER be nullptr if fmt is set.
+		const void* value = nullptr;
+
+		// Only use when value is a pointer to a value
+		LinkType linkType = LinkType::Int;
+
+		// Set anytime name changes (hopefully only once)
+		int nameWidth = -1;
 
 		// Whether the valueStr content is heap memory and needs to be freed before overwriting or closing the program
 		// Technically, it just means whether it is the properties panel's duty to free it.
@@ -90,10 +109,27 @@ namespace properties
 
 			if (!isDrawSkippable)
 			{
+				if (prop.name)
+				{
+					if (prop.nameWidth == -1) [[unlikely]]
+					{
+						props[i].nameWidth = MeasureText(prop.name, fontSize);
+					}
+					DrawRectangle(x - 3, y - 2, prop.nameWidth + 6, fontSize + 5, { 255,255,255, 32 });
+				}
+
 				switch (type)
 				{
 				case TYPE_CLOSER: {
 					indent -= indentSize;
+					{
+						int xStart = x - indentSize;
+						int xEnd = propertiesPanel.bounds.xmax - panelPaddingX;
+						if (xEnd >= xStart)
+						{
+							DrawLine(xStart, y, xEnd, y, WHITE);
+						}
+					}
 				} break;
 
 				case TYPE_MULTILINE: {
@@ -121,8 +157,30 @@ namespace properties
 				} break;
 
 				case TYPE_REGULAR: {
+					const char* valueStr = "";
+					if (!prop.fmt)
+					{
+						valueStr = (const char*)prop.value;
+					}
+					else
+					{
+						switch (prop.linkType)
+						{
+						case Property::LinkType::Int:
+							valueStr = TextFormat(prop.fmt, *(const int*)prop.value);
+							break;
+
+						case Property::LinkType::Float:
+							valueStr = TextFormat(prop.fmt, *(const float*)prop.value);
+							break;
+
+						case Property::LinkType::String:
+							valueStr = TextFormat(prop.fmt, *(const char* const*)prop.value);
+							break;
+						}
+					}
 					DrawText(prop.name, x, y, fontSize, WHITE);
-					DrawText((const char*)prop.value, x + dividerX, y, fontSize, WHITE);
+					DrawText(valueStr, x + dividerX, y, fontSize, WHITE);
 				} break;
 
 				default: {
@@ -132,10 +190,14 @@ namespace properties
 				}
 			}
 
-			int numLines = (type != TYPE_CLOSER) ? 1 : 0;
-			if (prop.value)
+			int numLines = 1;
+			if (prop.value && !prop.fmt)
 			{
 				numLines = CountNewlines((const char*)prop.value);
+			}
+			else if (prop.value && prop.fmt && prop.linkType == Property::LinkType::String)
+			{
+				numLines = CountNewlines(*(const char* const*)prop.value);
 			}
 			y += lineHeight * numLines;
 		}
@@ -174,6 +236,24 @@ namespace properties
 			.value    = value,
 			.usesHeap = true,
 		});
+	}
+
+	void AddLinkedInt(const char* name, const char* fmt, const int* valueSrcPtr)
+	{
+#if _DEBUG
+		if (!valueSrcPtr || !fmt)
+		{
+			throw "Neither source pointer nor format can be null when adding a linked property!";
+			return;
+		}
+#endif
+		_Add({
+			.name     = name,
+			.fmt      = fmt,
+			.value    = valueSrcPtr,
+			.linkType = Property::LinkType::Int,
+			.usesHeap = false,
+			});
 	}
 
 	void AddHeader(const char* name)
