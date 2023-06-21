@@ -79,7 +79,12 @@ namespace properties
 		int indent     = 0;
 		int halfHeight = fontSize / 2;
 
-		constexpr Color accentColor = { 255,255,255, 32 };
+		constexpr Color accentColor = { 255,255,255, 32 }; // Default
+		constexpr Color typeColor_Int = { 237,226,117, 96 }; // Yellow
+		constexpr Color typeColor_Float = { 65,105,225, 96 }; // Blue
+		constexpr Color typeColor_String = { 227,138,174, 96 }; // Pinkish
+		constexpr Color typeColor_Bool = { 212,98,255, 96 }; // Purple
+		constexpr Color typeColor_Any = { 1,1,1, 96 }; // Black
 
 		for (size_t i = 0; i < numProps; ++i)
 		{
@@ -140,7 +145,33 @@ namespace properties
 				{
 					props[i].nameWidth = MeasureText(prop.name, fontSize);
 				}
-				DrawRectangle(x - 3, y - 2, prop.nameWidth + 6, fontSize + 5, accentColor);
+				Color color = accentColor;
+				if (type == TYPE_REGULAR)
+				{
+					switch (prop.type)
+					{
+					case PropType::Int:
+						color = typeColor_Int;
+						break;
+
+					case PropType::Float:
+						color = typeColor_Float;
+						break;
+
+					case PropType::String:
+						color = typeColor_String;
+						break;
+
+					case PropType::Bool:
+						color = typeColor_Bool;
+						break;
+
+					case PropType::Any:
+						color = typeColor_Any;
+						break;
+					}
+				}
+				DrawRectangle(x - 3, y - 2, prop.nameWidth + 6, fontSize + 5, color);
 			}
 
 			switch (type)
@@ -202,6 +233,10 @@ namespace properties
 					case PropType::String:
 						valueStr = TextFormat(prop.fmt, *(const char* const*)prop.value);
 						break;
+
+					case PropType::Bool:
+						valueStr = *(const bool*)prop.value ? "true" : "false";
+						break;
 					}
 				}
 				DrawText(prop.name, x, y, fontSize, WHITE);
@@ -244,12 +279,24 @@ namespace properties
 		});
 	}
 
+	void AddBool(const char* name, bool value)
+	{
+		_AddProperty({
+			.name     = name,
+			.fmt      = nullptr,
+			.value    = value ? "true" : "false",
+			.type     = PropType::Bool,
+			.usesHeap = false,
+		});
+	}
+
 	void AddString(const char* name, const char* valueStr)
 	{
 		_AddProperty({
 			.name     = name,
 			.fmt      = nullptr,
 			.value    = valueStr,
+			.type     = PropType::String,
 			.usesHeap = false,
 		});
 	}
@@ -285,6 +332,11 @@ namespace properties
 	void AddLinkedString(const char* name, const char* fmt, const char* const* valueSrcPtr)
 	{
 		_AddLinked(name, fmt, PropType::String, valueSrcPtr);
+	}
+
+	void AddLinkedBool(const char* name, const bool* valueSrcPtr)
+	{
+		_AddLinked(name, "%s", PropType::Bool, valueSrcPtr);
 	}
 
 	void AddHeader(const char* name)
