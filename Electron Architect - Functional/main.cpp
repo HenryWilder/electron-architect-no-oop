@@ -18,6 +18,8 @@ int main()
     panel::windowBounds.xmax = &windowWidth;
     panel::windowBounds.ymax = &windowHeight;
 
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
@@ -104,6 +106,13 @@ int main()
 
     while (!WindowShouldClose())
     {
+        if (IsWindowResized())
+        {
+            // Seems like a bug that these don't automatically change together?
+            panel::windowBounds.xmax = windowWidth = GetRenderWidth();
+            panel::windowBounds.ymax = windowHeight = GetRenderHeight();
+        }
+
         // Whether or not the mouse is currently doing something that should prevent hover effects/interactions from occurring
         // Todo: Make this more robust with prioritization and interruption
         bool hoverDisabled = false;
