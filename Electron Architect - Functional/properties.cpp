@@ -6,15 +6,18 @@
 namespace properties
 {
 	panel::Panel propertiesPanel = {
-		"Properties",
-		{
+		.title = "Properties",
+		.id = panel::PanelID::Properties,
+		.bounds = {
 			1000,
 			&panel::windowBounds.ymin,
 			&panel::windowBounds.xmax,
 			&panel::windowBounds.ymax,
 		},
-		panel::DraggableEdges::EdgeL
+		.draggable = panel::DraggableEdges::EdgeL
 	};
+
+#pragma region Property storage
 
 	// If neither name nor valueStr is nullptr, this is a regular property.
 	// If valueStr is nullptr but not name, this is a header.
@@ -50,8 +53,14 @@ namespace properties
 	};
 
 	constexpr size_t MAX_PROPS = 1024;
-	Property props[MAX_PROPS]  = {};
-	int numProps               = 0;
+	Property props[MAX_PROPS] = {};
+	int numProps = 0;
+
+#pragma endregion
+
+#pragma region Rendering
+
+	int scrollY = 0;
 
 	// Position of the divider (offset from left side)
 	// Todo: Make this draggable
@@ -155,7 +164,9 @@ namespace properties
 
 	void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isPressed)
 	{
-		int y          = propertiesPanel.bounds.ymin + panel::panelTitlebarHeight + panelPaddingY;
+		
+
+		int y          = propertiesPanel.bounds.ymin + panel::panelTitlebarHeight + panelPaddingY - scrollY;
 		int xBaseline  = propertiesPanel.bounds.xmin + panelPaddingX;
 		int indent     = 0;
 
@@ -265,6 +276,10 @@ namespace properties
 			y = yNext;
 		}
 	}
+
+#pragma endregion
+
+#pragma region Property list manipulation
 
 	void _AddProperty(Property newProperty)
 	{
@@ -422,4 +437,6 @@ namespace properties
 	{
 		Clear();
 	}
+
+#pragma endregion
 }

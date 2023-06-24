@@ -153,6 +153,38 @@ namespace panel
         }
     }
 
+    void BoundsToRect(Rect& rect, const Bounds& bounds)
+    {
+        int x = bounds.xmin;
+        int y = bounds.ymin;
+        rect.x = x;
+        rect.y = y;
+        rect.w = bounds.xmax - x;
+        rect.h = bounds.ymax - y;
+    }
+
+    void BoundsFromRect(Bounds& bounds, const Rect& rect)
+    {
+        int x = rect.x;
+        int y = rect.y;
+        bounds.xmin = x;
+        bounds.ymin = y;
+        bounds.xmax = x + rect.w;
+        bounds.ymax = y + rect.h;
+    }
+
+    // The only real reason this requires a panel and not just bounds is to ensure that it is being used properly.
+    // I will change it in the future if I find need for it to be done differently.
+    Bounds PanelClientBounds(const Panel& panel)
+    {
+        Bounds clientBounds;
+        clientBounds.xmin = panel.bounds.xmin + borderWidth;
+        clientBounds.ymin = panel.bounds.ymin + panelTitlebarHeight;
+        clientBounds.xmax = panel.bounds.xmax - borderWidth;
+        clientBounds.ymax = panel.bounds.ymax - borderWidth;
+        return clientBounds;
+    }
+
     bool BeginPanelScissor(const Panel* panel)
     {
         Bounds rect = panel->bounds;

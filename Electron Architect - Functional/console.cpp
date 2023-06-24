@@ -23,14 +23,15 @@ namespace console
 
 	panel::Panel consolePanel =
 	{
-		"Console",
-		{
+		.title = "Console",
+		.id = panel::PanelID::Console,
+		.bounds = {
 			&panel::windowBounds.xmin,
 			500,
 			&properties::propertiesPanel.bounds.xmin,
 			&panel::windowBounds.ymax
 		},
-		(panel::DraggableEdges)((int)panel::DraggableEdges::EdgeT | (int)panel::DraggableEdges::EdgeR)
+		.draggable = (panel::DraggableEdges)((int)panel::DraggableEdges::EdgeT | (int)panel::DraggableEdges::EdgeR)
 	};
 
 	struct LogElement

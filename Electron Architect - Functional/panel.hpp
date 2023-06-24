@@ -4,6 +4,18 @@
 // Functions shared by each of the panels.
 namespace panel
 {
+    // Identifies the panel for switch case
+    enum class PanelID : char
+    {
+        Unknown = -1, // There is a panel, but we don't know what it is
+        Null    =  0, // There is not a panel
+
+        Console,
+        Properties,
+        Graph,
+        Tools,
+    };
+
     extern Color background; // Color of standard panel background
     extern Color accent; // Color of standard panel parts separating sections
     extern Color foreground; // Color of standard panel text
@@ -95,6 +107,14 @@ namespace panel
         IntOrIntPtr xmin, ymin, xmax, ymax;
     };
 
+    struct Rect
+    {
+        int x, y, w, h;
+    };
+
+    void BoundsToRect(Rect& rect, const Bounds& bounds);
+    void BoundsFromRect(Bounds& bounds, const Rect& rect);
+
     // Can be referenced to keep RefBounds synced with window
     extern Bounds windowBounds;
     
@@ -118,9 +138,13 @@ namespace panel
     struct Panel
     {
         const char* title;
+        PanelID id;
         Bounds bounds;
         DraggableEdges draggable;
     };
+
+    // Does not produce a live Bounds.
+    Bounds PanelClientBounds(const Panel& panel);
 
     // Uses bitflags
     // Flags are contextual to other flags

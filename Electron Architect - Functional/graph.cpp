@@ -6,14 +6,15 @@
 namespace graph
 {
 	panel::Panel graphPanel = {
-		"Graph",
-		{
+		.title = "Graph",
+		.id = panel::PanelID::Graph,
+		.bounds = {
 			&tools::toolsPanel.bounds.xmax,
 			0,
 			&properties::propertiesPanel.bounds.xmin,
 			&console::consolePanel.bounds.ymin,
 		},
-		(panel::DraggableEdges)((int)panel::DraggableEdges::EdgeB | (int)panel::DraggableEdges::EdgeR)
+		.draggable = (panel::DraggableEdges)((int)panel::DraggableEdges::EdgeB | (int)panel::DraggableEdges::EdgeR)
 	};
 
 	void DrawPanelContents()

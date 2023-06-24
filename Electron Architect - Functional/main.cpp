@@ -197,23 +197,24 @@ int main()
 
             if (panel::BeginPanelScissor(currentPanel))
             {
-                if (currentPanel == &console::consolePanel)
+                switch (currentPanel->id)
                 {
+                case panel::PanelID::Console:
                     console::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled);
-                }
-                else if (currentPanel == &properties::propertiesPanel)
-                {
-                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
-                }
-                else if (currentPanel == &graph::graphPanel)
-                {
-                    graph::DrawPanelContents();
-                }
-                else if (currentPanel == &tools::toolsPanel)
-                {
-                    tools::DrawPanelContents();
-                }
+                    break;
 
+                case panel::PanelID::Properties:
+                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+                    break;
+
+                case panel::PanelID::Graph:
+                    graph::DrawPanelContents();
+                    break;
+
+                case panel::PanelID::Tools:
+                    tools::DrawPanelContents();
+                    break;
+                }
             } panel::EndPanelScissor();
 
             panel::DrawPanelForeground(currentPanel);

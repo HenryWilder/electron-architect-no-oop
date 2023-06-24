@@ -4,14 +4,15 @@
 namespace tools
 {
 	panel::Panel toolsPanel = {
-		"Tools",
-		{
+		.title = "Tools",
+		.id = panel::PanelID::Tools,
+		.bounds = {
 			&panel::windowBounds.xmin,
 			&panel::windowBounds.ymin,
 			64,
 			&console::consolePanel.bounds.ymin
 		},
-		panel::DraggableEdges::None
+		.draggable = panel::DraggableEdges::None
 	};
 
 	void DrawPanelContents()
