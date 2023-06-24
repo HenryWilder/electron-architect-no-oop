@@ -7,13 +7,6 @@
 #include "tools.hpp"
 #include "graph.hpp"
 
-#if _DEBUG
-// "BIG OOF"
-#define BAD_INT 0xB1600F
-#else
-#define BAD_INT static_assert(false, "BAD_INT shouldn't be used outside of debug")
-#endif
-
 int ClampInt(int x, int min, int max)
 {
     return ((x > max) ? (max) : ((x < min) ? (min) : (x)));

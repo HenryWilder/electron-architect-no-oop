@@ -72,10 +72,16 @@ namespace properties
 	constexpr int lineHeight = 16;
 	constexpr int indentSize = 8;
 
-	constexpr int panelPaddingX = 6;
-	constexpr int panelPaddingY = 5;
-	constexpr int fontSize      = 8;
-	constexpr int halfHeight    = fontSize / 2;
+	constexpr int panelPaddingX  = 6;
+	constexpr int panelPaddingY  = 5;
+	constexpr int fontSize       = 8;
+	constexpr int halfHeight     = fontSize / 2;
+	constexpr int halfFontToLine = (lineHeight - fontSize) / 2 + 1; // Half of the difference between the font height and the line height
+
+	constexpr int propertyPaddingL = 3;
+	constexpr int propertyPaddingR = 3;
+	constexpr int propertyPaddingT = 2;
+	constexpr int propertyPaddingB = -halfFontToLine;
 
 	constexpr Color accentColor      = { 255,255,255, 32 }; // Default
 	constexpr Color typeColor_Int    = { 237,226,117, 96 }; // Yellow
@@ -280,7 +286,15 @@ namespace properties
 
 				if (isHovering && isDrawable)
 				{
-					DrawRectangle(x - 3, y - 2, (xMax - x) + 3, yNext - y - 3, color);
+					int paddedXMin = x - propertyPaddingL;
+					int paddedYMin = y - propertyPaddingT;
+					int paddedXMax = xMax  + propertyPaddingR;
+					int paddedYMax = yNext + propertyPaddingB;
+
+					int paddedW = paddedXMax - paddedXMin;
+					int paddedH = paddedYMax - paddedYMin;
+
+					DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
 
 					if (type == PropertyType::Header && isPressed)
 					{
@@ -301,7 +315,16 @@ namespace properties
 				{
 					props[i].nameWidth = MeasureText(prop.name, fontSize);
 				}
-				DrawRectangle(x - 3, y - 2, prop.nameWidth + 6, fontSize + 5, color);
+
+				int paddedXMin = x - propertyPaddingL;
+				int paddedYMin = y - propertyPaddingT;
+				int paddedXMax = x + prop.nameWidth + propertyPaddingR;
+				int paddedYMax = yNext + propertyPaddingB;
+
+				int paddedW = paddedXMax - paddedXMin;
+				int paddedH = paddedYMax - paddedYMin;
+
+				DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
 			}
 
 			switch (type)
