@@ -1,3 +1,4 @@
+#include <thread>
 #include <raylib.h>
 #include <raymath.h>
 #include "panel.hpp"
@@ -5,6 +6,13 @@
 #include "properties.hpp"
 #include "tools.hpp"
 #include "graph.hpp"
+
+#if _DEBUG
+// "BIG OOF"
+#define BAD_INT 0xB1600F
+#else
+#define BAD_INT static_assert(false, "BAD_INT shouldn't be used outside of debug")
+#endif
 
 int ClampInt(int x, int min, int max)
 {
@@ -96,7 +104,8 @@ int main()
         panels[numPanels - 1] = panel;
     };
 
-    panel::Panel* currentlyDragging = nullptr;
+    panel::Panel* currentlyWithin = nullptr;
+    panel::Panel* currentlyResizing = nullptr;
     panel::PanelHover draggingInfo = panel::PanelHover();
 
     // Offset from mouse when dragging - Set when drag begins
@@ -128,60 +137,96 @@ int main()
         testString = (mouseCurrX < (windowWidth / 2)) ? "Left" : "Right";
         testNumber = GetRandomValue(0,9999);
 
-        if (currentlyDragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        if (!currentlyResizing)
         {
-            currentlyDragging = nullptr;
-        }
-
-        if (!currentlyDragging && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        {
-            for (panel::Panel* currentPanel : panels)
+            currentlyWithin = nullptr;
+            for (panel::Panel* panel : panels)
             {
-                panel::PanelHover panelHover = panel::CheckPanelCollision(currentPanel->bounds, currentPanel->draggable, mouseCurrX, mouseCurrY);
-                if (panelHover)
+                panel::Bounds bounds = panel->bounds;
+                if (bounds.xmin <= mouseCurrX && mouseCurrX <= bounds.xmax &&
+                    bounds.ymin <= mouseCurrY && mouseCurrY <= bounds.ymax)
                 {
-                    currentlyDragging = currentPanel;
-                    draggingInfo = panelHover;
-
-                    int xBound = panel::HasLeft(panelHover.identity) ? currentPanel->bounds.xmin : currentPanel->bounds.xmax;
-                    int yBound = panel::HasTop (panelHover.identity) ? currentPanel->bounds.ymin : currentPanel->bounds.ymax;
-                    mouseOffsX = xBound - mouseCurrX;
-                    mouseOffsY = yBound - mouseCurrY;
-
-                    shiftToFront(currentPanel);
-
-                    break;
+                    currentlyWithin = panel;
                 }
             }
         }
 
-        hoverDisabled = !!currentlyDragging;
-
-        if (currentlyDragging)
+        if (currentlyResizing && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
-            // Left
-            if (panel::HasLeft(draggingInfo.identity))
+            currentlyResizing = nullptr;
+        }
+
+        if (!currentlyResizing && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && currentlyWithin)
+        {
+            panel::PanelHover panelHover = panel::CheckPanelCollision(currentlyWithin->bounds, currentlyWithin->draggable, mouseCurrX, mouseCurrY);
+            if (panelHover)
             {
-                int x = ClampInt(mouseCurrX + mouseOffsX, 0, currentlyDragging->bounds.xmax - panel::minWidth);
-                draggingInfo.bounds.xmax = (draggingInfo.bounds.xmin = currentlyDragging->bounds.xmin = x) + panel::panelDraggableWidth;
+                currentlyResizing = currentlyWithin;
+                draggingInfo = panelHover;
+
+                int xBound = panel::HasLeft(panelHover.identity) ? currentlyWithin->bounds.xmin : currentlyWithin->bounds.xmax;
+                int yBound = panel::HasTop (panelHover.identity) ? currentlyWithin->bounds.ymin : currentlyWithin->bounds.ymax;
+                mouseOffsX = xBound - mouseCurrX;
+                mouseOffsY = yBound - mouseCurrY;
+
+                shiftToFront(currentlyWithin);
             }
-            // Right
-            else if (panel::HasRight(draggingInfo.identity))
+        }
+
+        hoverDisabled = !!currentlyResizing;
+
+        // Resize panel
+        if (currentlyResizing)
+        {
+            // For no other reason than to shorten the name
+            constexpr int dragWidth = panel::panelDraggableWidth;
+
+            panel::Bounds& resizingBounds = currentlyResizing->bounds;
+
+            bool isDraggingL = panel::HasLeft  (draggingInfo.identity);
+            bool isDraggingR = panel::HasRight (draggingInfo.identity);
+            bool isDraggingT = panel::HasTop   (draggingInfo.identity);
+            bool isDraggingB = panel::HasBottom(draggingInfo.identity);
+
+            bool isDraggingH = isDraggingL || isDraggingR;
+            bool isDraggingV = isDraggingT || isDraggingB;
+
+            // Horizontal
+            if (isDraggingH)
             {
-                int x = ClampInt(mouseCurrX + mouseOffsX, currentlyDragging->bounds.xmin + panel::minWidth, windowWidth);
-                draggingInfo.bounds.xmin = (draggingInfo.bounds.xmax = currentlyDragging->bounds.xmax = x) - panel::panelDraggableWidth;
+                int mouseOffsetX = mouseCurrX + mouseOffsX;
+
+                int xmin = isDraggingR ? (int)resizingBounds.xmin : 0;
+                int xmax = isDraggingL ? (int)resizingBounds.xmax : windowWidth;
+                int x = ClampInt(mouseOffsetX, xmin, xmax);
+
+                int xminNew = isDraggingL ? x : x - dragWidth;
+                int xmaxNew = isDraggingR ? x : x + dragWidth;
+
+                draggingInfo.bounds.xmin = xminNew;
+                draggingInfo.bounds.xmax = xmaxNew;
+
+                if (isDraggingL) { resizingBounds.xmin = xminNew; } // Left
+                else             { resizingBounds.xmax = xmaxNew; } // Right
             }
-            // Top
-            if (panel::HasTop(draggingInfo.identity))
+
+            // Vertical
+            if (isDraggingV)
             {
-                int y = ClampInt(mouseCurrY + mouseOffsY, 0, currentlyDragging->bounds.ymax - panel::minHeight);
-                draggingInfo.bounds.ymax = (draggingInfo.bounds.ymin = currentlyDragging->bounds.ymin = y) + panel::panelDraggableWidth;
-            }
-            // Bottom
-            else if (panel::HasBottom(draggingInfo.identity))
-            {
-                int y = ClampInt(mouseCurrY + mouseOffsY, currentlyDragging->bounds.ymin + panel::minHeight, windowHeight);
-                draggingInfo.bounds.ymin = (draggingInfo.bounds.ymax = currentlyDragging->bounds.ymax = y) - panel::panelDraggableWidth;
+                int mouseOffsetY = mouseCurrY + mouseOffsY;
+
+                int ymin = isDraggingB ? (int)resizingBounds.ymin : 0;
+                int ymax = isDraggingT ? (int)resizingBounds.ymax : windowHeight;
+                int y = ClampInt(mouseOffsetY, ymin, ymax);
+
+                int yminNew = isDraggingT ? y : y - dragWidth;
+                int ymaxNew = isDraggingB ? y : y + dragWidth;
+
+                draggingInfo.bounds.ymin = yminNew;
+                draggingInfo.bounds.ymax = ymaxNew;
+
+                if (isDraggingT) { resizingBounds.ymin = yminNew; } // Top
+                else             { resizingBounds.ymax = ymaxNew; } // Bottom
             }
 
             console::CalculateDisplayableLogCount(); // Call once per tick, while panels move
@@ -193,6 +238,9 @@ int main()
 
         for (panel::Panel* currentPanel : panels)
         {
+            bool isWithinThisPanel = currentPanel == currentlyWithin;
+            bool isHoverNeeded = isWithinThisPanel && !hoverDisabled;
+
             panel::DrawPanelBackground(currentPanel);
 
             if (panel::BeginPanelScissor(currentPanel))
@@ -200,11 +248,11 @@ int main()
                 switch (currentPanel->id)
                 {
                 case panel::PanelID::Console:
-                    console::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled);
+                    console::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded);
                     break;
 
                 case panel::PanelID::Properties:
-                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
                     break;
 
                 case panel::PanelID::Graph:
@@ -218,11 +266,20 @@ int main()
             } panel::EndPanelScissor();
 
             panel::DrawPanelForeground(currentPanel);
+
+#if _DEBUG // Debug panel interactability with mouse
+            if (!isWithinThisPanel) [[likely]] // Only one panel at a time ever has the mouse within it
+            {
+                panel::Rect rect;
+                panel::BoundsToRect(rect, currentPanel->bounds);
+                DrawRectangle(rect.x, rect.y, rect.w, rect.h, { 127,127,127, 127 });
+            }
+#endif
         }
 
-        if (currentlyDragging)
+        if (currentlyResizing)
         {
-            panel::DrawPanelDragElement(currentlyDragging->bounds, draggingInfo);
+            panel::DrawPanelDragElement(currentlyResizing->bounds, draggingInfo);
         }
 
         EndDrawing();
