@@ -1,12 +1,12 @@
-#include <cstdarg>
 #include <raylib.h>
 #include <raymath.h>
 extern "C"
 {
-#include "logtypes.h"
+	#include "logtypes.h"
 }
 #include "textfmt.hpp"
 #include "console.hpp"
+#include "properties.hpp"
 #pragma warning( push )
 #pragma warning( disable : 26812 )
 
@@ -27,10 +27,10 @@ namespace console
 		{
 			&panel::windowBounds.xmin,
 			500,
-			&panel::windowBounds.xmax,
+			&properties::propertiesPanel.bounds.xmin,
 			&panel::windowBounds.ymax
 		},
-		panel::DraggableEdges::EdgeT
+		(panel::DraggableEdges)((int)panel::DraggableEdges::EdgeT | (int)panel::DraggableEdges::EdgeR)
 	};
 
 	struct LogElement

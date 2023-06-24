@@ -2,7 +2,7 @@
 #include "panel.hpp"
 #include <concepts>
 
-enum class PropType
+enum class PropValueType
 {
     Int,
     Float,
@@ -15,48 +15,48 @@ enum class PropType
 namespace properties
 {
     extern panel::Panel propertiesPanel;
-    void DrawPanelContents(int mousex, int mousey, bool allowHover);
+    void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isPressed);
 
     // A unique ID for tracking whether the property list needs to be cleared.
     extern size_t showingPropertiesFor;
 
     // Adds a property with formatting
-    void Addf_hint(const char* name, size_t hintSizeMax, PropType type, const char* fmt...);
+    void Addf_hint(const char* name, size_t hintSizeMax, PropValueType type, const char* fmt...);
 
     // Adds a property with formatting
-    void Addf(const char* name, PropType type, const char* fmt...);
+    void Addf(const char* name, PropValueType type, const char* fmt...);
 
     // Adds a static, signed integer property
     template<std::signed_integral T> void AddInt(const char* name, T value)
     {
-        properties::Addf(name, PropType::Int, "%i", value);
+        properties::Addf(name, PropValueType::Int, "%i", value);
     }
     // Adds a static, signed integer property
     template<std::signed_integral T> void AddInt(const char* name, size_t hintSizeMax, T value)
     {
-        properties::Addf_hint(name, hintSizeMax, PropType::Int, "%i", value);
+        properties::Addf_hint(name, hintSizeMax, PropValueType::Int, "%i", value);
     }
 
     // Adds a static, unsigned integer property
     template<std::unsigned_integral T> void AddInt(const char* name, T value)
     {
-        properties::Addf(name, PropType::Int, "%u", value);
+        properties::Addf(name, PropValueType::Int, "%u", value);
     }
     // Adds a static, unsigned integer property
     template<std::unsigned_integral T> void AddInt(const char* name, size_t hintSizeMax, T value)
     {
-        properties::Addf_hint(name, hintSizeMax, PropType::Int, "%u", value);
+        properties::Addf_hint(name, hintSizeMax, PropValueType::Int, "%u", value);
     }
 
     // Adds a static float property
     template<std::floating_point T> void AddFloat(const char* name, T value)
     {
-        properties::Addf(name, PropType::Float, "%f", value);
+        properties::Addf(name, PropValueType::Float, "%f", value);
     }
     // Adds a static float property
     template<std::floating_point T> void AddFloat(const char* name, size_t hintSizeMax, T value)
     {
-        properties::Addf_hint(name, hintSizeMax, PropType::Float, "%f", value);
+        properties::Addf_hint(name, hintSizeMax, PropValueType::Float, "%f", value);
     }
 
     // Adds a static boolean property

@@ -66,8 +66,8 @@ int main()
     properties::AddFloat("Double 3", 23462.74567246573456);
     properties::AddHeader("Collection 2.1");
     properties::AddString("Hello", ":3");
-    properties::Addf_hint("Formatted", 9, PropType::Int, "0x%06x", 543634);
-    properties::Addf_hint("Overflow hint", 6, PropType::Int, "0x%09x", 1);
+    properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
+    properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);
     properties::AddString("Multiline A", "Apple\nOrange\nBanana");
     properties::AddMultiline("Multiline B", "Apple\nOrange\nBanana");
     properties::AddLinkedInt("Linked", "%5i", &testNumber);
@@ -203,7 +203,7 @@ int main()
                 }
                 else if (currentPanel == &properties::propertiesPanel)
                 {
-                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled);
+                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, !hoverDisabled, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
                 }
                 else if (currentPanel == &graph::graphPanel)
                 {
