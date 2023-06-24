@@ -113,41 +113,12 @@ namespace properties
 	void DrawHeaderProperty(int& indent, int x, int y, const Property& prop)
 	{
 		DrawText(prop.name, x, y, fontSize, WHITE);
-		{
-			int xStart = x + MeasureText(prop.name, fontSize) + 6;
-			int xEnd = xMax;
-			if (xEnd >= xStart)
-			{
-				int yMid = y + halfHeight;
-				if (prop.isCollapsed)
-				{
-					int yUpper = yMid;
-					int yLower = yMid + 3;
-					DrawLine(xStart, yUpper, xEnd, yUpper, accentColor);
-					DrawLine(xStart, yUpper, xStart, yLower, accentColor);
-					DrawLine(xStart, yLower, xEnd, yLower, accentColor);
-				}
-				else
-				{
-					DrawLine(xStart, yMid, xEnd, yMid, accentColor);
-				}
-			}
-		}
 		indent += indentSize;
 	}
 
 	void DrawCloserProperty(int& indent, int x, int y)
 	{
 		indent -= indentSize;
-		{
-			int xStart = x - indentSize;
-			int xEnd = xMax;
-			if (xEnd >= xStart)
-			{
-				int halfwayY = y + lineHeight / 2;
-				DrawLine(xStart, halfwayY, xEnd, halfwayY, accentColor);
-			}
-		}
 	}
 
 	void DrawRegularProperty(int x, int y, const Property& prop, int dividerXEnd)
@@ -177,6 +148,47 @@ namespace properties
 		Regular   = '\3',
 	};
 
+	Color GetValueAccentColor(PropValueType type)
+	{
+		switch (type)
+		{
+		case PropValueType::Bool:   return typeColor_Bool;
+		case PropValueType::Byte:   return typeColor_Byte;
+		case PropValueType::Int:    return typeColor_Int;
+		case PropValueType::Float:  return typeColor_Float;
+		case PropValueType::String: return typeColor_String;
+		case PropValueType::Any:    return typeColor_Any;
+		}
+		return accentColor;
+	}
+
+	Color GetCollectionAccentColor(PropCollectionType type)
+	{
+		switch (type)
+		{
+		case PropCollectionType::Object: return typeColor_Object;
+		case PropCollectionType::Array:  return typeColor_Array;
+		case PropCollectionType::Map:    return typeColor_Map;
+		}
+		return accentColor;
+	}
+
+	Color GetPropertyAccentColor(PropertyType type, const Property& prop)
+	{
+		if (type == PropertyType::Regular)
+		{
+			return GetValueAccentColor(prop.valueType);
+		}
+		else if (type == PropertyType::Header)
+		{
+			return GetCollectionAccentColor(prop.collectionType);
+		}
+		else
+		{
+			return accentColor;
+		}
+	}
+
 	void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isPressed)
 	{
 #if _DEBUG
@@ -186,7 +198,7 @@ namespace properties
 			for (size_t i = 0; i < numProps; ++i)
 			{
 				const Property& prop = props[i];
-				bool isHeader =  prop.name && !prop.value;
+				bool isHeader = prop.name && !prop.value;
 				bool isCloser = !prop.name && !prop.value;
 
 				n += (int)isHeader - (int)isCloser;
@@ -209,176 +221,269 @@ namespace properties
 		// Start of anything right of the divider
 		int dividerXEnd = dividerXStart + dividerWidth + panelPaddingX;
 
-		int y          = clientBounds.ymin + panelPaddingY - scrollY;
-		int xBaseline  = clientBounds.xmin + panelPaddingX;
-		int indent     = 0;
+		int xBaseline = clientBounds.xmin + panelPaddingX;
 
 		xMax = clientBounds.xmax - panelPaddingX;
 
-		// When a collection is collapsed, hide everything deeper than this until we reach a closer with indentation.
-		// Set to -1 when uncollapsed.
-		int hideUntilIndent = -1;
+		// Stored in first pass for reuse in second pass.
+		// Collapsed properties don't add to previous line's height.
+		// Size is `drawableProperties`
+		int lineHeights[MAX_PROPS] = {};
 
-		PropertyType typePrev = PropertyType(-1);
+		// Stored in first pass for use in second pass.
+		size_t drawableProperties = numProps;
 
-		for (size_t i = 0; i < numProps; ++i)
+		// Pass 1: Draw property text and info
 		{
-			if (y > clientBounds.ymax)
-			{
-				break;
-			}
+			// Running y position in pixels
+			int y = clientBounds.ymin + panelPaddingY - scrollY;
 
-			const Property& prop = props[i];
-			PropertyType type = (PropertyType)((((char)!!prop.name) << 1) | ((char)!!prop.value));
+			// Current line's indentation in pixels.
+			// Does not include panel xmin.
+			int indent = 0;
 
-			if (hideUntilIndent != -1)
+			// When a collection is collapsed, hide everything deeper than this until we reach a closer with indentation.
+			// Set to -1 when uncollapsed.
+			int hideUntilIndent = -1;
+
+			PropertyType typePrev = PropertyType(-1);
+
+			for (size_t i = 0; i < numProps; ++i)
 			{
-				if (type == PropertyType::Header)
+				if (y > clientBounds.ymax)
 				{
-					indent += indentSize;
+					drawableProperties = i;
+					break;
 				}
-				if (type == PropertyType::Closer)
+
+				const Property& prop = props[i];
+				PropertyType type = (PropertyType)((((char)!!prop.name) << 1) | ((char)!!prop.value));
+
+				if (hideUntilIndent != -1)
 				{
-					indent -= indentSize;
-					if (indent == hideUntilIndent)
+					if (type == PropertyType::Header)
 					{
-						hideUntilIndent = -1;
+						indent += indentSize;
 					}
-				}
-				continue;
-			}
 
-			int x = xBaseline + indent;
-
-			int numLines = 1;
-			if (prop.value && !prop.fmt)
-			{
-				numLines = CountNewlines((const char*)prop.value);
-			}
-			else if (prop.value && prop.fmt && prop.valueType == PropValueType::String)
-			{
-				numLines = CountNewlines(*(const char* const*)prop.value);
-			}
-			int yNext = y + lineHeight * numLines;
-
-			// Indentation lines
-			if (indent > 0)
-			{
-				int yStart = y;
-				int yEnd = yNext;
-				int drawIndent = indent;
-
-				// First line
-				{
 					if (type == PropertyType::Closer)
 					{
-						yEnd -= lineHeight / 2;
+						indent -= indentSize;
+						if (indent == hideUntilIndent)
+						{
+							hideUntilIndent = -1;
+						}
 					}
-					if (typePrev == PropertyType::Header && !props[i - 1].isCollapsed)
+
+					if (i != 0) [[likely]]
 					{
-						yStart -= halfFontToLine;
+						lineHeights[i] = lineHeights[i - 1];
 					}
-
-					int drawIndentComplete = xBaseline + drawIndent - indentSize;
-					DrawLine(drawIndentComplete, yStart, drawIndentComplete, yEnd, accentColor);
-					drawIndent -= indentSize;
-				}
-
-				for (; drawIndent > 0; drawIndent -= indentSize)
-				{
-					int drawIndentComplete = xBaseline + drawIndent - indentSize;
-					DrawLine(drawIndentComplete, y, drawIndentComplete, yNext, accentColor);
-				}
-			}
-			typePrev = type;
-
-			bool isHoverableProperty = type != PropertyType::Closer;
-
-			Color color = accentColor;
-			if (type == PropertyType::Regular)
-			{
-				switch (prop.valueType)
-				{
-				case PropValueType::Bool:   color = typeColor_Bool;   break;
-				case PropValueType::Byte:   color = typeColor_Byte;   break;
-				case PropValueType::Int:    color = typeColor_Int;    break;
-				case PropValueType::Float:  color = typeColor_Float;  break;
-				case PropValueType::String: color = typeColor_String; break;
-				case PropValueType::Any:    color = typeColor_Any;    break;
-				}
-			}
-			else if (type == PropertyType::Header)
-			{
-				switch (prop.collectionType)
-				{
-				case PropCollectionType::Object: color = typeColor_Object; break;
-				case PropCollectionType::Array:  color = typeColor_Array;  break;
-				case PropCollectionType::Map:    color = typeColor_Map;    break;
-				}
-			}
-
-			bool isHovering =
-				x <= mousex && mousex <= xMax &&
-				y <= mousey && mousey < yNext;
-
-			if (isHoverableProperty)
-			{
-				if (allowHover && isHovering) [[unlikely]] // Even if hover is allowed and true, only one property will ever be hovered at a time.
-				{
-					int paddedXMin = x - propertyPaddingL;
-					int paddedYMin = y - propertyPaddingT;
-					int paddedXMax = xMax + propertyPaddingR;
-					int paddedYMax = yNext + propertyPaddingB;
-
-					int paddedW = paddedXMax - paddedXMin;
-					int paddedH = paddedYMax - paddedYMin;
-
-					DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
-
-					if (type == PropertyType::Header && isPressed)
+					else [[unlikely]] // Special case that would only even happen once in a draw anyway
 					{
-						console::Log("Header collapse toggled");
-						props[i].isCollapsed = !prop.isCollapsed;
+						lineHeights[i] = 0;
 					}
+
+					continue;
 				}
-				else if (prop.name) [[likely]] // Only closers won't have a name
+
+				bool isHoverableProperty = type != PropertyType::Closer;
+
+				int x = xBaseline + indent;
+
+				Color color = GetPropertyAccentColor(type, prop);
+
+				int numLines = 1;
+				if (prop.value && !prop.fmt)
 				{
-					if (prop.nameWidth == -1) [[unlikely]]
-					{
-						props[i].nameWidth = MeasureText(prop.name, fontSize);
-					}
-
-					int paddedXMin = x - propertyPaddingL;
-					int paddedYMin = y - propertyPaddingT;
-					int paddedXMax = x + prop.nameWidth + propertyPaddingR;
-					int paddedYMax = yNext + propertyPaddingB;
-
-					int paddedW = paddedXMax - paddedXMin;
-					int paddedH = paddedYMax - paddedYMin;
-
-					DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
+					numLines = CountNewlines((const char*)prop.value);
 				}
-			}
+				else if (prop.value && prop.fmt && prop.valueType == PropValueType::String)
+				{
+					numLines = CountNewlines(*(const char* const*)prop.value);
+				}
+				int yNext = y + lineHeight * numLines;
+				lineHeights[i] = yNext;
 
-			if (type == PropertyType::Header && prop.isCollapsed)
-			{
-				hideUntilIndent = indent;
-			}
+				bool isHovering =
+					x <= mousex && mousex <= xMax &&
+					y <= mousey && mousey < yNext;
 
-			switch (type)
-			{
-			case PropertyType::Closer:    DrawCloserProperty   (indent, x, y                   ); break;
-			case PropertyType::Header:    DrawHeaderProperty   (indent, x, y, prop             ); break;
-			case PropertyType::Regular:   DrawRegularProperty  (        x, y, prop, dividerXEnd); break;
-			}
+				if (isHoverableProperty)
+				{
+					if (allowHover && isHovering) [[unlikely]] // Even if hover is allowed and true, only one property will ever be hovered at a time.
+					{
+						int paddedXMin = x - propertyPaddingL;
+						int paddedYMin = y - propertyPaddingT;
+						int paddedXMax = xMax + propertyPaddingR;
+						int paddedYMax = yNext + propertyPaddingB;
 
-			y = yNext;
+						int paddedW = paddedXMax - paddedXMin;
+						int paddedH = paddedYMax - paddedYMin;
+
+						DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
+
+						if (type == PropertyType::Header && isPressed)
+						{
+							console::Log("Header collapse toggled");
+							props[i].isCollapsed = !prop.isCollapsed;
+						}
+					}
+					else if (prop.name) [[likely]] // Only closers won't have a name
+					{
+						if (prop.nameWidth == -1) [[unlikely]]
+						{
+							props[i].nameWidth = MeasureText(prop.name, fontSize);
+						}
+
+						int paddedXMin = x - propertyPaddingL;
+						int paddedYMin = y - propertyPaddingT;
+						int paddedXMax = x + prop.nameWidth + propertyPaddingR;
+						int paddedYMax = yNext + propertyPaddingB;
+
+						int paddedW = paddedXMax - paddedXMin;
+						int paddedH = paddedYMax - paddedYMin;
+
+						DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
+					}
+				}
+
+				if (type == PropertyType::Header && prop.isCollapsed)
+				{
+					hideUntilIndent = indent;
+				}
+
+				switch (type)
+				{
+				case PropertyType::Closer:  DrawCloserProperty(indent, x, y); break;
+				case PropertyType::Header:  DrawHeaderProperty(indent, x, y, prop); break;
+				case PropertyType::Regular: DrawRegularProperty(x, y, prop, dividerXEnd); break;
+				}
+
+				y = yNext;
+			}
 		}
 
-		int panelX = clientBounds.xmin;
-		int panelY = clientBounds.ymin;
-		int panelH = clientBounds.ymax - panelY;
-		DrawRectangle(dividerXStart, panelY, dividerWidth, panelH, accentColor);
+		// Pass 2: Collection grouping lines
+		{
+			struct Indent
+			{
+				PropCollectionType type;
+				int yStart;
+			};
+
+			// We draw the indent line when popping off the stack
+			Indent indentStack[32] = {};
+
+			// Current size of the indent stack
+			size_t indentDepth = 0;
+
+			int lineHeightPrev = 0;
+
+			for (size_t i = 0; i < drawableProperties; ++i)
+			{
+				const Property& prop = props[i];
+				PropertyType type = (PropertyType)((((char)!!prop.name) << 1) | ((char)!!prop.value));
+
+				int lineHeightCurr = lineHeights[i];
+
+				int y = lineHeightPrev;
+				int h = lineHeightCurr - y;
+
+				// No change in height - indicates the property is collapsed
+				bool isCollapsedValue;
+				{
+					isCollapsedValue = h == 0;
+					lineHeightPrev = lineHeightCurr;
+				}
+
+				// A collapsed header does not contribute to indentation
+				bool isCollapsedHeader = type == PropertyType::Header && prop.isCollapsed;
+
+				bool isCollapsedProp = isCollapsedValue || isCollapsedHeader;
+				
+				int indent = (indentDepth - 1) * indentSize;
+				int indentComplete = xBaseline + indent;
+
+				if (type == PropertyType::Header)
+				{
+				 	Color color = GetCollectionAccentColor(prop.collectionType);
+				 
+				 	int xStart = indentComplete + indentSize + MeasureText(prop.name, fontSize) + propertyPaddingL;
+				 	int xEnd = xMax;
+				 	if (xEnd >= xStart)
+				 	{
+				 		int yUpper = y + halfHeight;
+				 		DrawLine(xStart, yUpper, xEnd, yUpper, color);
+				 		if (prop.isCollapsed)
+				 		{
+				 			int yLower = lineHeightCurr - (lineHeight - fontSize);
+				 			DrawLine(xStart, yLower, xEnd, yLower, color);
+				 		}
+				 	}
+				}
+
+				if (isCollapsedProp)
+				{
+					continue;
+				}
+
+				// Push
+				if (type == PropertyType::Header)
+				{
+					Indent indentInfo = 
+					{
+						.type = prop.collectionType,
+						.yStart = lineHeightCurr,
+					};
+
+					indentStack[indentDepth++] = indentInfo;
+				}
+
+				// Pop
+				else if (type == PropertyType::Closer)
+				{
+					if (indentDepth == 0)
+					{
+						console::Error("properties - Collection popped when no collections remained");
+						return;
+					}
+
+					Indent indentInfo = indentStack[--indentDepth];
+
+					Color color = GetCollectionAccentColor(indentInfo.type);
+
+					int xStart = indentComplete;
+					int xEnd = xMax;
+
+					int yStart = indentInfo.yStart - halfFontToLine;
+					int yEnd = y + lineHeight / 2;
+
+					// Uncollapsed properties with collapsed nested properties seem to trigger this
+					if (yStart > yEnd)
+					{
+						console::Error("properties - Ended prior to beginning");
+					}
+
+					if (xStart < yEnd)
+					{
+						DrawLine(xStart, yStart, xStart, yEnd, color);
+					}
+					if (xStart < xEnd)
+					{
+						DrawLine(xStart, yEnd, xEnd, yEnd, color);
+					}
+				}
+			}
+		}
+
+		// Draw divider
+		{
+			int panelX = clientBounds.xmin;
+			int panelY = clientBounds.ymin;
+			int panelH = clientBounds.ymax - panelY;
+			DrawRectangle(dividerXStart, panelY, dividerWidth, panelH, accentColor);
+		}
 	}
 
 #pragma endregion
