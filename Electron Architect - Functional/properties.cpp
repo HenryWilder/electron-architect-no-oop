@@ -21,7 +21,7 @@ namespace properties
 
 	// If neither name nor valueStr is nullptr, this is a regular property.
 	// If valueStr is nullptr but not name, this is a header.
-	// If name is nullptr but not valueStr, this is a multiline property.
+	// If name is nullptr but not valueStr, this is INVALID
 	// If both name and valueStr are nullptr, this is a closer.
 	struct Property
 	{
@@ -64,7 +64,9 @@ namespace properties
 
 	// Position of the divider (offset from left side)
 	// Todo: Make this draggable
-	int dividerX = 100;
+	int dividerX = 150;
+	// Width of the divider visual
+	constexpr int dividerWidth = 3;
 
 	int xMax;
 
@@ -137,7 +139,7 @@ namespace properties
 		}
 	}
 
-	void DrawRegularProperty(int x, int y, const Property& prop)
+	void DrawRegularProperty(int x, int y, const Property& prop, int dividerXEnd)
 	{
 		const char* valueStr = "";
 		if (!prop.fmt)
@@ -155,23 +157,11 @@ namespace properties
 			}
 		}
 		DrawText(prop.name, x, y, fontSize, WHITE);
-		DrawText(valueStr, x + dividerX, y, fontSize, WHITE);
-	}
-
-	void DrawMultilineProperty(int x, int y, const Property& prop)
-	{
-		DrawText((const char*)prop.value, x, y, fontSize, WHITE);
-		int numLines = 1;
-		char ch = '\0';
-		for (const char* str = (const char*)prop.value; (ch = *str) != '\0'; ++str)
-		{
-			numLines += (int)(ch == '\n');
-		}
+		DrawText(valueStr, dividerXEnd, y, fontSize, WHITE);
 	}
 
 	enum class PropertyType : char {
 		Closer    = '\0',
-		Multiline = '\1',
 		Header    = '\2',
 		Regular   = '\3',
 	};
@@ -202,6 +192,11 @@ namespace properties
 #endif
 
 		panel::Bounds clientBounds = panel::PanelClientBounds(propertiesPanel);
+
+		// End of anything left of the divider 
+		int dividerXStart = clientBounds.xmin + dividerX - panelPaddingX;
+		// Start of anything right of the divider
+		int dividerXEnd = dividerXStart + dividerWidth + panelPaddingX;
 
 		int y          = clientBounds.ymin + panelPaddingY - scrollY;
 		int xBaseline  = clientBounds.xmin + panelPaddingX;
@@ -327,13 +322,17 @@ namespace properties
 
 			switch (type)
 			{
-			case PropertyType::Closer:    DrawCloserProperty   (indent, x, y      ); break;
-			case PropertyType::Multiline: DrawMultilineProperty(        x, y, prop); break;
-			case PropertyType::Header:    DrawHeaderProperty   (indent, x, y, prop); break;
-			case PropertyType::Regular:   DrawRegularProperty  (        x, y, prop); break;
+			case PropertyType::Closer:    DrawCloserProperty   (indent, x, y                   ); break;
+			case PropertyType::Header:    DrawHeaderProperty   (indent, x, y, prop             ); break;
+			case PropertyType::Regular:   DrawRegularProperty  (        x, y, prop, dividerXEnd); break;
 			}
 			y = yNext;
 		}
+
+		int panelX = clientBounds.xmin;
+		int panelY = clientBounds.ymin;
+		int panelH = clientBounds.ymax - panelY;
+		DrawRectangle(dividerXStart, panelY, dividerWidth, panelH, accentColor);
 	}
 
 #pragma endregion
@@ -351,7 +350,7 @@ namespace properties
 		props[numProps++] = newProperty;
 	}
 
-	// @param type Use `Property::Type::Any` if unsure or if the type changes
+	// @param type Use `Any` if unsure or if the type changes
 	void Addf_hint(const char* name, size_t hintSizeMax, PropValueType type, const char* fmt...)
 	{
 		va_list args;
@@ -461,19 +460,6 @@ namespace properties
 			.value    = nullptr,
 			.usesHeap = false,
 		});
-	}
-
-	void AddMultiline(const char* name, const char* valueStr)
-	{
-		AddHeader(name);
-		_AddProperty({
-			.name     = nullptr,
-			.fmt      = nullptr,
-			.value    = valueStr,
-			.type     = PropValueType::String,
-			.usesHeap = false
-		});
-		AddCloser();
 	}
 
 	void Clear()

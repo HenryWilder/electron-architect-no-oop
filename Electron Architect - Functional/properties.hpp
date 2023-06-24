@@ -92,10 +92,6 @@ namespace properties
     // Unindents following properties
     void AddCloser();
 
-    // Adds a property whose value takes up multiple lines
-    // Multiline properties still work with Add(), but this gives the result better separation.
-    void AddMultiline(const char* name, const char* valueStr);
-
     // Clears the properties panel info
     void Clear();
 
