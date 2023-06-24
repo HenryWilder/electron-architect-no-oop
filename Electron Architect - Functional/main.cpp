@@ -92,6 +92,28 @@ int main()
             properties::AddLinkedString("Side of screen", "%s", &testString);
         } properties::AddCloser();
     } properties::AddCloser();
+    properties::AddHeader("Collection 3"); {
+        properties::AddInt("Int 4", 48325);
+        properties::AddInt("Long long 4", 6372795382473892ll);
+        properties::AddFloat("Float 4", 534.34782f);
+        properties::AddFloat("Double 4", 23462.74567246573456);
+        properties::AddHeader("Collection 3.1"); {
+            properties::AddString("Hello", ":3");
+            properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
+            properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);
+            properties::AddString("Multiline", "Apple\nOrange\nBanana");
+            properties::AddLinkedInt("Linked", "%5i", &testNumber);
+            properties::AddLinkedString("Side of screen", "%s", &testString);
+            properties::AddHeader("Collection 3.2"); {
+                properties::AddString("Hello", ":3");
+                properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
+                properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);
+                properties::AddString("Multiline", "Apple\nOrange\nBanana");
+                properties::AddLinkedInt("Linked", "%5i", &testNumber);
+                properties::AddLinkedString("Side of screen", "%s", &testString);
+            } properties::AddCloser();
+        } properties::AddCloser();
+    } properties::AddCloser();
 #endif
 
     Panel* currentlyWithin = nullptr;

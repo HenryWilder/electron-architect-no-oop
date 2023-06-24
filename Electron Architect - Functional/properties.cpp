@@ -208,6 +208,8 @@ namespace properties
 		// Set to -1 when uncollapsed.
 		int hideUntilIndent = -1;
 
+		PropertyType typePrev = PropertyType(-1);
+
 		for (size_t i = 0; i < numProps; ++i)
 		{
 			if (y > clientBounds.ymax)
@@ -271,17 +273,17 @@ namespace properties
 				}
 			}
 
-			if (allowHover)
-			{
-				bool isHovering =
-					x <= mousex && mousex <= xMax &&
-					y <= mousey && mousey < yNext;
+			bool isHovering =
+				x <= mousex && mousex <= xMax &&
+				y <= mousey && mousey < yNext;
 
-				if (isHovering && isDrawable)
+			if (isDrawable)
+			{
+				if (allowHover && isHovering) [[unlikely]] // Even if hover is allowed and true, only one property will ever be hovered at a time.
 				{
 					int paddedXMin = x - propertyPaddingL;
 					int paddedYMin = y - propertyPaddingT;
-					int paddedXMax = xMax  + propertyPaddingR;
+					int paddedXMax = xMax + propertyPaddingR;
 					int paddedYMax = yNext + propertyPaddingB;
 
 					int paddedW = paddedXMax - paddedXMin;
@@ -295,29 +297,28 @@ namespace properties
 						props[i].isCollapsed = !prop.isCollapsed;
 					}
 				}
+				else if (prop.name) [[likely]] // Only closers won't have a name
+				{
+					if (prop.nameWidth == -1) [[unlikely]]
+					{
+						props[i].nameWidth = MeasureText(prop.name, fontSize);
+					}
+
+					int paddedXMin = x - propertyPaddingL;
+					int paddedYMin = y - propertyPaddingT;
+					int paddedXMax = x + prop.nameWidth + propertyPaddingR;
+					int paddedYMax = yNext + propertyPaddingB;
+
+					int paddedW = paddedXMax - paddedXMin;
+					int paddedH = paddedYMax - paddedYMin;
+
+					DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
+				}
 			}
 
 			if (type == PropertyType::Header && prop.isCollapsed)
 			{
 				hideUntilIndent = indent;
-			}
-
-			if (prop.name)
-			{
-				if (prop.nameWidth == -1) [[unlikely]]
-				{
-					props[i].nameWidth = MeasureText(prop.name, fontSize);
-				}
-
-				int paddedXMin = x - propertyPaddingL;
-				int paddedYMin = y - propertyPaddingT;
-				int paddedXMax = x + prop.nameWidth + propertyPaddingR;
-				int paddedYMax = yNext + propertyPaddingB;
-
-				int paddedW = paddedXMax - paddedXMin;
-				int paddedH = paddedYMax - paddedYMin;
-
-				DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
 			}
 
 			switch (type)
@@ -326,7 +327,20 @@ namespace properties
 			case PropertyType::Header:    DrawHeaderProperty   (indent, x, y, prop             ); break;
 			case PropertyType::Regular:   DrawRegularProperty  (        x, y, prop, dividerXEnd); break;
 			}
+
+			// Indentation lines
+			{
+				int drawIndentStart = (type == PropertyType::Header) ? indent - indentSize : indent;
+				for (int drawIndent = drawIndentStart; drawIndent > 0; drawIndent -= indentSize)
+				{
+					int drawIndentComplete = xBaseline + drawIndent - indentSize;
+					DrawLine(drawIndentComplete, y, drawIndentComplete, yNext, accentColor);
+				}
+			}
+
 			y = yNext;
+
+			typePrev = type;
 		}
 
 		int panelX = clientBounds.xmin;
@@ -343,6 +357,7 @@ namespace properties
 	{
 		if (numProps == MAX_PROPS)
 		{
+			console::Error("Too many properties, out of property memory");
 			throw "Too many properties, out of property memory";
 			return; // In case someone tries to continue anyway
 		}
