@@ -72,6 +72,12 @@ int main()
     properties::AddFloat("Double 1", 453.93332384);
     properties::AddBool("Boolean 1", true);
     properties::AddBool("Boolean 2", false);
+    properties::AddHeader("Array"); {
+        properties::AddString("0", "apple");
+        properties::AddString("1", "orange");
+        properties::AddString("2", "banana");
+        properties::AddString("3", "mango");
+    } properties::AddCloser();
     properties::AddHeader("Collection 1"); {
         properties::AddInt("Int 2", 56435);
         properties::AddInt("Long long 2", 67574563653463ll);
