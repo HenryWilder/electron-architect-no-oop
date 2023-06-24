@@ -231,9 +231,15 @@ int main()
             console::CalculateDisplayableLogCount(); // Call once per tick, while panels move
         }
 
+        // Scroll within properties panel
         if (!hoverDisabled && currentlyWithin == &propertiesPanel)
         {
-
+            float amount = GetMouseWheelMove();
+            properties::scrollY -= (int)(amount) * properties::lineHeight;
+            if (properties::scrollY < 0)
+            {
+                properties::scrollY = 0;
+            }
         }
 
 #pragma endregion

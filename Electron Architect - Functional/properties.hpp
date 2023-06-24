@@ -15,6 +15,12 @@ namespace properties
     };
 
     extern panel::Panel propertiesPanel;
+
+    constexpr int lineHeight = 16;
+
+    extern int scrollY;
+    extern int dividerX;
+
     void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isPressed);
 
     // A unique ID for tracking whether the property list needs to be cleared.

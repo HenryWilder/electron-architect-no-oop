@@ -66,10 +66,8 @@ namespace properties
 	// Todo: Make this draggable
 	int dividerX = 100;
 
-	// Recalculates when panel window is resized
 	int xMax;
 
-	constexpr int lineHeight = 16;
 	constexpr int indentSize = 8;
 
 	constexpr int panelPaddingX  = 6;
