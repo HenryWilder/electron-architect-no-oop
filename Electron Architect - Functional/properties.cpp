@@ -84,11 +84,14 @@ namespace properties
 	constexpr int propertyPaddingB = -halfFontToLine;
 
 	constexpr Color accentColor      = { 255,255,255, 32 }; // Default
-	constexpr Color typeColor_Int    = { 237,226,117, 96 }; // Yellow
-	constexpr Color typeColor_Float  = {  65,105,225, 96 }; // Blue
-	constexpr Color typeColor_String = { 227,138,174, 96 }; // Pinkish
-	constexpr Color typeColor_Bool   = { 212, 98,255, 96 }; // Purple
-	constexpr Color typeColor_Any    = {   1,  1,  1, 96 }; // Black
+	constexpr Color typeColor_Int    = {  44,222,174,127 }; // Sea green
+	constexpr Color typeColor_Float  = { 157,255, 63,127 }; // Yellow green
+	constexpr Color typeColor_String = { 248,  3,204,127 }; // Magenta
+	constexpr Color typeColor_Bool   = { 144,  0,  2,127 }; // Maroon
+	constexpr Color typeColor_Object = {   0,163,230,127 }; // Blue
+	constexpr Color typeColor_Array  = { 252,200, 39,127 }; // Gold
+	constexpr Color typeColor_Tuple  = {   0, 88,196,127 }; // Dark blue
+	constexpr Color typeColor_Any    = {  10, 10, 10,127 }; // Black
 
 	int CountNewlines(const char* str)
 	{
@@ -271,6 +274,10 @@ namespace properties
 				case PropValueType::Bool:   color = typeColor_Bool;   break;
 				case PropValueType::Any:    color = typeColor_Any;    break;
 				}
+			}
+			else if (type == PropertyType::Header)
+			{
+				color = typeColor_Object;
 			}
 
 			bool isHovering =
