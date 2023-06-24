@@ -2,18 +2,18 @@
 #include "panel.hpp"
 #include <concepts>
 
-enum class PropValueType
-{
-    Int,
-    Float,
-    String,
-    Bool,
-    Any, // Displays as a string but with a different tag
-};
-
 // Functions related to the Properties panel.
 namespace properties
 {
+    enum class PropValueType
+    {
+        Int,
+        Float,
+        String,
+        Bool,
+        Any, // Displays as a string but with a different tag
+    };
+
     extern panel::Panel propertiesPanel;
     void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isPressed);
 

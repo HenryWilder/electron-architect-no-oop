@@ -7,13 +7,30 @@
 #include "tools.hpp"
 #include "graph.hpp"
 
-int ClampInt(int x, int min, int max)
-{
-    return ((x > max) ? (max) : ((x < min) ? (min) : (x)));
-}
+int ClampInt(int x, int min, int max);
+template<size_t NUM_PANELS> void ShiftToFront(panel::Panel* panels[NUM_PANELS], panel::Panel* panel);
+
+#pragma region // "using" longwinded names with namespace already in name
+
+using panel::Panel;
+using panel::PanelID;
+using panel::Bounds;
+using panel::PanelHover;
+using panel::windowBounds;
+
+using properties::propertiesPanel;
+using properties::PropValueType;
+
+using tools::toolsPanel;
+using graph::graphPanel;
+using console::consolePanel;
+
+#pragma endregion
 
 int main()
 {
+#pragma region // Pre-loop
+
     int windowWidth = 1280;
     int windowHeight = 720;
     panel::windowBounds.xmax = &windowWidth;
@@ -24,12 +41,13 @@ int main()
     InitWindow(windowWidth, windowHeight, "Electron Architect");
     SetTargetFPS(60);
 
-    panel::Panel* panels[] = {
-        &properties::propertiesPanel,
-        &tools::toolsPanel,
-        &graph::graphPanel,
-        &console::consolePanel,
+    Panel* panels[] = {
+        &propertiesPanel,
+        &toolsPanel,
+        &graphPanel,
+        &consolePanel,
     };
+    constexpr size_t NUM_PANELS = sizeof(panels) / sizeof(panel::Panel*);
 
     console::CalculateDisplayableLogCount(); // Call at beginning so that panels don't need to move to "activate" the console
 
@@ -77,47 +95,31 @@ int main()
     } properties::AddCloser();
 #endif
 
-    // Moves the specified panel to the front of the draw order - which is the back of the array.
-    auto shiftToFront = [&panels](panel::Panel* panel) {
-        constexpr size_t numPanels = sizeof(panels) / sizeof(panel::Panel*);
-        size_t i = 0;
-        // Locate panel
-        for (; i < numPanels; ++i)
-        {
-            if (panels[i] == panel)
-            {
-                break;
-            }
-        }
-        // Shift following panels
-        for (++i; i < numPanels; ++i)
-        {
-            panels[i - 1] = panels[i];
-        }
-        panels[numPanels - 1] = panel;
-    };
-
-    panel::Panel* currentlyWithin = nullptr;
-    panel::Panel* currentlyResizing = nullptr;
-    panel::PanelHover draggingInfo = panel::PanelHover();
+    Panel* currentlyWithin = nullptr;
+    Panel* currentlyResizing = nullptr;
+    PanelHover draggingInfo = PanelHover();
 
     // Offset from mouse when dragging - Set when drag begins
     int mouseOffsX{ }, mouseOffsY{ };
 
     int mousePrevX{ }, mousePrevY{ };
 
+#pragma endregion
+
+#pragma region // Loop
+
     while (!WindowShouldClose())
     {
         if (IsWindowResized())
         {
-            int propertiesWidth = properties::propertiesPanel.bounds.xmax - properties::propertiesPanel.bounds.xmin;
-            int consoleHeight = console::consolePanel.bounds.ymax - console::consolePanel.bounds.ymin;
+            int propertiesWidth = propertiesPanel.bounds.xmax - propertiesPanel.bounds.xmin;
+            int consoleHeight   =    consolePanel.bounds.ymax -    consolePanel.bounds.ymin;
 
-            panel::windowBounds.xmax = windowWidth = GetRenderWidth();
-            properties::propertiesPanel.bounds.xmin = windowWidth - propertiesWidth;
+            windowBounds.xmax = windowWidth = GetRenderWidth();
+            propertiesPanel.bounds.xmin = windowWidth - propertiesWidth;
 
-            panel::windowBounds.ymax = windowHeight = GetRenderHeight();
-            console::consolePanel.bounds.ymin = windowHeight - consoleHeight;
+            windowBounds.ymax = windowHeight = GetRenderHeight();
+            consolePanel.bounds.ymin = windowHeight - consoleHeight;
         }
 
         // Whether or not the mouse is currently doing something that should prevent hover effects/interactions from occurring
@@ -127,15 +129,19 @@ int main()
         int mouseCurrX{ GetMouseX() }, mouseCurrY{ GetMouseY() };
         int mouseDltaX{ mouseCurrX - mousePrevX }, mouseDltaY{ mouseCurrY - mousePrevY };
 
+#if _DEBUG
         testString = (mouseCurrX < (windowWidth / 2)) ? "Left" : "Right";
         testNumber = GetRandomValue(0,9999);
+#endif
+
+#pragma region // Resize panel
 
         if (!currentlyResizing)
         {
             currentlyWithin = nullptr;
-            for (panel::Panel* panel : panels)
+            for (Panel* panel : panels)
             {
-                panel::Bounds bounds = panel->bounds;
+                Bounds bounds = panel->bounds;
                 if (bounds.xmin <= mouseCurrX && mouseCurrX <= bounds.xmax &&
                     bounds.ymin <= mouseCurrY && mouseCurrY <= bounds.ymax)
                 {
@@ -151,7 +157,7 @@ int main()
 
         if (!currentlyResizing && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && currentlyWithin)
         {
-            panel::PanelHover panelHover = panel::CheckPanelCollision(currentlyWithin->bounds, currentlyWithin->draggable, mouseCurrX, mouseCurrY);
+            PanelHover panelHover = panel::CheckPanelCollision(currentlyWithin->bounds, currentlyWithin->draggable, mouseCurrX, mouseCurrY);
             if (panelHover)
             {
                 currentlyResizing = currentlyWithin;
@@ -162,7 +168,7 @@ int main()
                 mouseOffsX = xBound - mouseCurrX;
                 mouseOffsY = yBound - mouseCurrY;
 
-                shiftToFront(currentlyWithin);
+                ShiftToFront<NUM_PANELS>(panels, currentlyWithin);
             }
         }
 
@@ -174,7 +180,7 @@ int main()
             // For no other reason than to shorten the name
             constexpr int dragWidth = panel::panelDraggableWidth;
 
-            panel::Bounds& resizingBounds = currentlyResizing->bounds;
+            Bounds& resizingBounds = currentlyResizing->bounds;
 
             bool isDraggingL = panel::HasLeft  (draggingInfo.identity);
             bool isDraggingR = panel::HasRight (draggingInfo.identity);
@@ -225,11 +231,18 @@ int main()
             console::CalculateDisplayableLogCount(); // Call once per tick, while panels move
         }
 
+        if (!hoverDisabled && currentlyWithin == &propertiesPanel)
+        {
+
+        }
+
+#pragma endregion
+
         BeginDrawing();
 
         ClearBackground(BLACK);
 
-        for (panel::Panel* currentPanel : panels)
+        for (Panel* currentPanel : panels)
         {
             bool isWithinThisPanel = currentPanel == currentlyWithin;
             bool isHoverNeeded = isWithinThisPanel && !hoverDisabled;
@@ -240,19 +253,19 @@ int main()
             {
                 switch (currentPanel->id)
                 {
-                case panel::PanelID::Console:
+                case PanelID::Console:
                     console::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded);
                     break;
 
-                case panel::PanelID::Properties:
+                case PanelID::Properties:
                     properties::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
                     break;
 
-                case panel::PanelID::Graph:
+                case PanelID::Graph:
                     graph::DrawPanelContents();
                     break;
 
-                case panel::PanelID::Tools:
+                case PanelID::Tools:
                     tools::DrawPanelContents();
                     break;
                 }
@@ -281,10 +294,43 @@ int main()
         mousePrevY = mouseCurrY;
     }
 
+#pragma endregion
+
+#pragma region // Post-loop
+
     CloseWindow();
 
     properties::Clear();
     console::Clear();
 
 	return 0;
+
+#pragma endregion
+}
+
+int ClampInt(int x, int min, int max)
+{
+    return ((x > max) ? (max) : ((x < min) ? (min) : (x)));
+}
+
+template<size_t NUM_PANELS> void ShiftToFront(panel::Panel* panels[NUM_PANELS], panel::Panel* panel)
+{
+    size_t i = 0;
+
+    // Locate panel
+    for (; i < NUM_PANELS; ++i)
+    {
+        if (panels[i] == panel)
+        {
+            break;
+        }
+    }
+
+    // Shift following panels
+    for (++i; i < NUM_PANELS; ++i)
+    {
+        panels[i - 1] = panels[i];
+    }
+
+    panels[NUM_PANELS - 1] = panel;
 }
