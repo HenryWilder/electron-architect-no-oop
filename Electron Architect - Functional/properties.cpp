@@ -49,7 +49,7 @@ namespace properties
 
 		// Only meaningful on headers
 		// If true, hide everything until the matching closer
-		bool isCollapsed = false;
+		bool isCollapsed = true;
 	};
 
 	constexpr size_t MAX_PROPS = 1024;
@@ -73,7 +73,7 @@ namespace properties
 	constexpr int indentSize = 8;
 
 	constexpr int panelPaddingX = 6;
-	constexpr int panelPaddingY = 4;
+	constexpr int panelPaddingY = 5;
 	constexpr int fontSize      = 8;
 	constexpr int halfHeight    = fontSize / 2;
 
@@ -104,7 +104,17 @@ namespace properties
 			if (xEnd >= xStart)
 			{
 				int yMid = y + halfHeight;
-				DrawLine(xStart, yMid, xEnd, yMid, accentColor);
+				if (prop.isCollapsed)
+				{
+					int yUpper = yMid - 2;
+					int yLower = yMid + 2;
+					DrawLine(xStart, yUpper, xEnd, yUpper, accentColor);
+					DrawLine(xStart, yLower, xEnd, yLower, accentColor);
+				}
+				else
+				{
+					DrawLine(xStart, yMid, xEnd, yMid, accentColor);
+				}
 			}
 		}
 		indent += indentSize;
@@ -164,13 +174,36 @@ namespace properties
 
 	void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isPressed)
 	{
-		
+#if _DEBUG
+		// Check for unbalanced collections
+		{
+			int n = 0;
+			for (size_t i = 0; i < numProps; ++i)
+			{
+				const Property& prop = props[i];
+				bool isHeader =  prop.name && !prop.value;
+				bool isCloser = !prop.name && !prop.value;
 
-		int y          = propertiesPanel.bounds.ymin + panel::panelTitlebarHeight + panelPaddingY - scrollY;
-		int xBaseline  = propertiesPanel.bounds.xmin + panelPaddingX;
+				n += (int)isHeader - (int)isCloser;
+			}
+			if (n > 0)
+			{
+				console::Error("Imbalanced properties: More headers than closers");
+			}
+			else if (n < 0)
+			{
+				console::Error("Imbalanced properties: More closers than headers");
+			}
+		}
+#endif
+
+		panel::Bounds clientBounds = panel::PanelClientBounds(propertiesPanel);
+
+		int y          = clientBounds.ymin + panelPaddingY - scrollY;
+		int xBaseline  = clientBounds.xmin + panelPaddingX;
 		int indent     = 0;
 
-		xMax = propertiesPanel.bounds.xmax - panelPaddingX;
+		xMax = clientBounds.xmax - panelPaddingX;
 
 		// When a collection is collapsed, hide everything deeper than this until we reach a closer with indentation.
 		// Set to -1 when uncollapsed.
@@ -178,7 +211,7 @@ namespace properties
 
 		for (size_t i = 0; i < numProps; ++i)
 		{
-			if (y > propertiesPanel.bounds.ymax)
+			if (y > clientBounds.ymax)
 			{
 				break;
 			}
@@ -188,14 +221,19 @@ namespace properties
 
 			if (hideUntilIndent != -1)
 			{
-				if (type == PropertyType::Closer && (indent - indentSize) == hideUntilIndent) [[unlikely]] // Only happens once when iterating over collapsed items
+				if (type == PropertyType::Header)
 				{
-					hideUntilIndent = -1;
+					indent += indentSize;
 				}
-				else [[likely]]
+				if (type == PropertyType::Closer)
 				{
-					continue;
+					indent -= indentSize;
+					if (indent == hideUntilIndent)
+					{
+						hideUntilIndent = -1;
+					}
 				}
+				continue;
 			}
 
 			int x = xBaseline + indent;
@@ -252,7 +290,7 @@ namespace properties
 				}
 			}
 
-			if (prop.isCollapsed)
+			if (type == PropertyType::Header && prop.isCollapsed)
 			{
 				hideUntilIndent = indent;
 			}

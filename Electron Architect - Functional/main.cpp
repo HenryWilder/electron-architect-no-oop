@@ -53,27 +53,27 @@ int main()
     properties::AddFloat("Double 1", 453.93332384);
     properties::AddBool("Boolean 1", true);
     properties::AddBool("Boolean 2", false);
-    properties::AddHeader("Collection 1");
-    properties::AddInt("Int 2", 56435);
-    properties::AddInt("Long long 2", 67574563653463ll);
-    properties::AddFloat("Float 2", 453.63534f);
-    properties::AddFloat("Double 2", 343423.4578975757364563);
-    properties::AddCloser();
-    properties::AddHeader("Collection 2");
-    properties::AddInt("Int 3", 48325);
-    properties::AddInt("Long long 3", 6372795382473892ll);
-    properties::AddFloat("Float 3", 534.34782f);
-    properties::AddFloat("Double 3", 23462.74567246573456);
-    properties::AddHeader("Collection 2.1");
-    properties::AddString("Hello", ":3");
-    properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
-    properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);
-    properties::AddString("Multiline A", "Apple\nOrange\nBanana");
-    properties::AddMultiline("Multiline B", "Apple\nOrange\nBanana");
-    properties::AddLinkedInt("Linked", "%5i", &testNumber);
-    properties::AddLinkedString("Side of screen", "%s", &testString);
-    properties::AddCloser();
-    properties::AddCloser();
+    properties::AddHeader("Collection 1"); {
+        properties::AddInt("Int 2", 56435);
+        properties::AddInt("Long long 2", 67574563653463ll);
+        properties::AddFloat("Float 2", 453.63534f);
+        properties::AddFloat("Double 2", 343423.4578975757364563);
+    } properties::AddCloser();
+    properties::AddHeader("Collection 2"); {
+        properties::AddInt("Int 3", 48325);
+        properties::AddInt("Long long 3", 6372795382473892ll);
+        properties::AddFloat("Float 3", 534.34782f);
+        properties::AddFloat("Double 3", 23462.74567246573456);
+        properties::AddHeader("Collection 2.1"); {
+            properties::AddString("Hello", ":3");
+            properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
+            properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);
+            properties::AddString("Multiline A", "Apple\nOrange\nBanana");
+            properties::AddMultiline("Multiline B", "Apple\nOrange\nBanana");
+            properties::AddLinkedInt("Linked", "%5i", &testNumber);
+            properties::AddLinkedString("Side of screen", "%s", &testString);
+        } properties::AddCloser();
+    } properties::AddCloser();
 #endif
 
     // Moves the specified panel to the front of the draw order - which is the back of the array.
