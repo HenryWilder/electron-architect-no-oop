@@ -7,11 +7,19 @@ namespace properties
 {
     enum class PropValueType
     {
+        Bool,
+        Byte,
         Int,
         Float,
         String,
-        Bool,
         Any, // Displays as a string but with a different tag
+    };
+
+    enum class PropCollectionType
+    {
+        Object, // Default
+        Array,
+        Map,
     };
 
     extern panel::Panel propertiesPanel;
@@ -87,7 +95,11 @@ namespace properties
     void AddLinkedBool(const char* name, const bool* valueSrcPtr);
 
     // Indents following properties
-    void AddHeader(const char* name);
+    void AddHeader(const char* name, PropCollectionType type);
+
+    inline void AddObjectHeader(const char* name) { AddHeader(name, PropCollectionType::Object); }
+    inline void AddArrayHeader (const char* name) { AddHeader(name, PropCollectionType::Array); }
+    inline void AddMapHeader   (const char* name) { AddHeader(name, PropCollectionType::Map); }
 
     // Unindents following properties
     void AddCloser();

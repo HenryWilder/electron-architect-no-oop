@@ -72,24 +72,24 @@ int main()
     properties::AddFloat("Double 1", 453.93332384);
     properties::AddBool("Boolean 1", true);
     properties::AddBool("Boolean 2", false);
-    properties::AddHeader("Array"); {
+    properties::AddArrayHeader("Array"); {
         properties::AddString("0", "apple");
         properties::AddString("1", "orange");
         properties::AddString("2", "banana");
         properties::AddString("3", "mango");
     } properties::AddCloser();
-    properties::AddHeader("Collection 1"); {
-        properties::AddInt("Int 2", 56435);
-        properties::AddInt("Long long 2", 67574563653463ll);
-        properties::AddFloat("Float 2", 453.63534f);
-        properties::AddFloat("Double 2", 343423.4578975757364563);
+    properties::AddMapHeader("Map 1"); {
+        properties::AddInt("apple", 56435);
+        properties::AddInt("orange", 876673);
+        properties::AddInt("banana", 2435);
+        properties::AddInt("mango", 325234);
     } properties::AddCloser();
-    properties::AddHeader("Collection 2"); {
+    properties::AddObjectHeader("Collection 2"); {
         properties::AddInt("Int 3", 48325);
         properties::AddInt("Long long 3", 6372795382473892ll);
         properties::AddFloat("Float 3", 534.34782f);
         properties::AddFloat("Double 3", 23462.74567246573456);
-        properties::AddHeader("Collection 2.1"); {
+        properties::AddObjectHeader("Collection 2.1"); {
             properties::AddString("Hello", ":3");
             properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
             properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);
@@ -98,19 +98,19 @@ int main()
             properties::AddLinkedString("Side of screen", "%s", &testString);
         } properties::AddCloser();
     } properties::AddCloser();
-    properties::AddHeader("Collection 3"); {
+    properties::AddObjectHeader("Collection 3"); {
         properties::AddInt("Int 4", 48325);
         properties::AddInt("Long long 4", 6372795382473892ll);
         properties::AddFloat("Float 4", 534.34782f);
         properties::AddFloat("Double 4", 23462.74567246573456);
-        properties::AddHeader("Collection 3.1"); {
+        properties::AddObjectHeader("Collection 3.1"); {
             properties::AddString("Hello", ":3");
             properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
             properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);
             properties::AddString("Multiline", "Apple\nOrange\nBanana");
             properties::AddLinkedInt("Linked", "%5i", &testNumber);
             properties::AddLinkedString("Side of screen", "%s", &testString);
-            properties::AddHeader("Collection 3.2"); {
+            properties::AddObjectHeader("Collection 3.2"); {
                 properties::AddString("Hello", ":3");
                 properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);
                 properties::Addf_hint("Overflow hint", 6, PropValueType::Int, "0x%09x", 1);

@@ -35,8 +35,11 @@ namespace properties
 		// ! Should NEVER be nullptr if fmt is set.
 		const void* value = nullptr;
 
-		// Only use when value is a pointer to a value
-		PropValueType type = PropValueType::Any;
+		// Only meaningful on values
+		PropValueType valueType = PropValueType::Any;
+
+		// Only meaningful on headers
+		PropCollectionType collectionType = PropCollectionType::Object;
 
 		// Set anytime name changes (hopefully only once)
 		int nameWidth = -1;
@@ -84,14 +87,17 @@ namespace properties
 	constexpr int propertyPaddingB = -halfFontToLine;
 
 	constexpr Color accentColor      = { 255,255,255, 32 }; // Default
+
+	constexpr Color typeColor_Bool   = { 144,  0,  2,127 }; // Maroon
+	constexpr Color typeColor_Byte   = {   0,109,102,127 }; // Sherpa blue
 	constexpr Color typeColor_Int    = {  44,222,174,127 }; // Sea green
 	constexpr Color typeColor_Float  = { 157,255, 63,127 }; // Yellow green
 	constexpr Color typeColor_String = { 248,  3,204,127 }; // Magenta
-	constexpr Color typeColor_Bool   = { 144,  0,  2,127 }; // Maroon
+	constexpr Color typeColor_Any    = {  10, 10, 10,127 }; // Black
+
 	constexpr Color typeColor_Object = {   0,163,230,127 }; // Blue
 	constexpr Color typeColor_Array  = { 252,200, 39,127 }; // Gold
-	constexpr Color typeColor_Tuple  = {   0, 88,196,127 }; // Dark blue
-	constexpr Color typeColor_Any    = {  10, 10, 10,127 }; // Black
+	constexpr Color typeColor_Map    = {   0, 88,196,127 }; // Dark Blue
 
 	int CountNewlines(const char* str)
 	{
@@ -115,9 +121,10 @@ namespace properties
 				int yMid = y + halfHeight;
 				if (prop.isCollapsed)
 				{
-					int yUpper = yMid - 2;
-					int yLower = yMid + 2;
+					int yUpper = yMid;
+					int yLower = yMid + 3;
 					DrawLine(xStart, yUpper, xEnd, yUpper, accentColor);
+					DrawLine(xStart, yUpper, xStart, yLower, accentColor);
 					DrawLine(xStart, yLower, xEnd, yLower, accentColor);
 				}
 				else
@@ -137,7 +144,8 @@ namespace properties
 			int xEnd = xMax;
 			if (xEnd >= xStart)
 			{
-				DrawLine(xStart, y, xEnd, y, accentColor);
+				int halfwayY = y + lineHeight / 2;
+				DrawLine(xStart, halfwayY, xEnd, halfwayY, accentColor);
 			}
 		}
 	}
@@ -151,7 +159,7 @@ namespace properties
 		}
 		else
 		{
-			switch (prop.type)
+			switch (prop.valueType)
 			{
 			case PropValueType::Int:    valueStr = TextFormat(prop.fmt, *(const   int*       )prop.value); break;
 			case PropValueType::Float:  valueStr = TextFormat(prop.fmt, *(const float*       )prop.value); break;
@@ -247,44 +255,73 @@ namespace properties
 			{
 				numLines = CountNewlines((const char*)prop.value);
 			}
-			else if (prop.value && prop.fmt && prop.type == PropValueType::String)
+			else if (prop.value && prop.fmt && prop.valueType == PropValueType::String)
 			{
 				numLines = CountNewlines(*(const char* const*)prop.value);
 			}
 			int yNext = y + lineHeight * numLines;
 
-			bool isDrawable = type != PropertyType::Closer;
-
-			bool isDrawSkippable = x > xMax && isDrawable;
-
-			if (isDrawSkippable)
+			// Indentation lines
+			if (indent > 0)
 			{
-				y = yNext;
-				continue;
+				int yStart = y;
+				int yEnd = yNext;
+				int drawIndent = indent;
+
+				// First line
+				{
+					if (type == PropertyType::Closer)
+					{
+						yEnd -= lineHeight / 2;
+					}
+					if (typePrev == PropertyType::Header && !props[i - 1].isCollapsed)
+					{
+						yStart -= halfFontToLine;
+					}
+
+					int drawIndentComplete = xBaseline + drawIndent - indentSize;
+					DrawLine(drawIndentComplete, yStart, drawIndentComplete, yEnd, accentColor);
+					drawIndent -= indentSize;
+				}
+
+				for (; drawIndent > 0; drawIndent -= indentSize)
+				{
+					int drawIndentComplete = xBaseline + drawIndent - indentSize;
+					DrawLine(drawIndentComplete, y, drawIndentComplete, yNext, accentColor);
+				}
 			}
+			typePrev = type;
+
+			bool isHoverableProperty = type != PropertyType::Closer;
 
 			Color color = accentColor;
 			if (type == PropertyType::Regular)
 			{
-				switch (prop.type)
+				switch (prop.valueType)
 				{
+				case PropValueType::Bool:   color = typeColor_Bool;   break;
+				case PropValueType::Byte:   color = typeColor_Byte;   break;
 				case PropValueType::Int:    color = typeColor_Int;    break;
 				case PropValueType::Float:  color = typeColor_Float;  break;
 				case PropValueType::String: color = typeColor_String; break;
-				case PropValueType::Bool:   color = typeColor_Bool;   break;
 				case PropValueType::Any:    color = typeColor_Any;    break;
 				}
 			}
 			else if (type == PropertyType::Header)
 			{
-				color = typeColor_Object;
+				switch (prop.collectionType)
+				{
+				case PropCollectionType::Object: color = typeColor_Object; break;
+				case PropCollectionType::Array:  color = typeColor_Array;  break;
+				case PropCollectionType::Map:    color = typeColor_Map;    break;
+				}
 			}
 
 			bool isHovering =
 				x <= mousex && mousex <= xMax &&
 				y <= mousey && mousey < yNext;
 
-			if (isDrawable)
+			if (isHoverableProperty)
 			{
 				if (allowHover && isHovering) [[unlikely]] // Even if hover is allowed and true, only one property will ever be hovered at a time.
 				{
@@ -335,19 +372,7 @@ namespace properties
 			case PropertyType::Regular:   DrawRegularProperty  (        x, y, prop, dividerXEnd); break;
 			}
 
-			// Indentation lines
-			{
-				int drawIndentStart = (type == PropertyType::Header) ? indent - indentSize : indent;
-				for (int drawIndent = drawIndentStart; drawIndent > 0; drawIndent -= indentSize)
-				{
-					int drawIndentComplete = xBaseline + drawIndent - indentSize;
-					DrawLine(drawIndentComplete, y, drawIndentComplete, yNext, accentColor);
-				}
-			}
-
 			y = yNext;
-
-			typePrev = type;
 		}
 
 		int panelX = clientBounds.xmin;
@@ -380,11 +405,11 @@ namespace properties
 		char* valueStr = Formatted(hintSizeMax, fmt, args);
 		va_end(args);
 		_AddProperty({
-			.name     = name,
-			.fmt      = nullptr,
-			.value    = valueStr,
-			.type     = type,
-			.usesHeap = true,
+			.name      = name,
+			.fmt       = nullptr,
+			.value     = valueStr,
+			.valueType = type,
+			.usesHeap  = true,
 		});
 	}
 
@@ -396,33 +421,33 @@ namespace properties
 		char* valueStr = Formatted(fmt, args);
 		va_end(args);
 		_AddProperty({
-			.name     = name,
-			.fmt      = nullptr,
-			.value    = valueStr,
-			.type     = type,
-			.usesHeap = true,
+			.name      = name,
+			.fmt       = nullptr,
+			.value     = valueStr,
+			.valueType = type,
+			.usesHeap  = true,
 		});
 	}
 
 	void AddBool(const char* name, bool value)
 	{
 		_AddProperty({
-			.name     = name,
-			.fmt      = nullptr,
-			.value    = value ? "true" : "false",
-			.type     = PropValueType::Bool,
-			.usesHeap = false,
+			.name      = name,
+			.fmt       = nullptr,
+			.value     = value ? "true" : "false",
+			.valueType = PropValueType::Bool,
+			.usesHeap  = false,
 		});
 	}
 
 	void AddString(const char* name, const char* valueStr)
 	{
 		_AddProperty({
-			.name     = name,
-			.fmt      = nullptr,
-			.value    = valueStr,
-			.type     = PropValueType::String,
-			.usesHeap = false,
+			.name      = name,
+			.fmt       = nullptr,
+			.value     = valueStr,
+			.valueType = PropValueType::String,
+			.usesHeap  = false,
 		});
 	}
 
@@ -436,11 +461,11 @@ namespace properties
 		}
 #endif
 		_AddProperty({
-			.name     = name,
-			.fmt      = fmt,
-			.value    = valueSrcPtr,
-			.type     = type,
-			.usesHeap = false,
+			.name      = name,
+			.fmt       = fmt,
+			.value     = valueSrcPtr,
+			.valueType = type,
+			.usesHeap  = false,
 		});
 	}
 
@@ -464,13 +489,14 @@ namespace properties
 		_AddLinked(name, "%s", PropValueType::Bool, valueSrcPtr);
 	}
 
-	void AddHeader(const char* name)
+	void AddHeader(const char* name, PropCollectionType type)
 	{
 		_AddProperty({
-			.name     = name,
-			.fmt      = nullptr,
-			.value    = nullptr,
-			.usesHeap = false
+			.name           = name,
+			.fmt            = nullptr,
+			.value          = nullptr,
+			.collectionType = type,
+			.usesHeap       = false,
 		});
 	}
 
