@@ -108,9 +108,14 @@ int main()
     {
         if (IsWindowResized())
         {
-            // Seems like a bug that these don't automatically change together?
+            int propertiesWidth = properties::propertiesPanel.bounds.xmax - properties::propertiesPanel.bounds.xmin;
+            int consoleHeight = console::consolePanel.bounds.ymax - console::consolePanel.bounds.ymin;
+
             panel::windowBounds.xmax = windowWidth = GetRenderWidth();
+            properties::propertiesPanel.bounds.xmin = windowWidth - propertiesWidth;
+
             panel::windowBounds.ymax = windowHeight = GetRenderHeight();
+            console::consolePanel.bounds.ymin = windowHeight - consoleHeight;
         }
 
         // Whether or not the mouse is currently doing something that should prevent hover effects/interactions from occurring
