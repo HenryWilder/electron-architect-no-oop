@@ -107,7 +107,7 @@ namespace console
 			float minBgAlpha = backgroundHoverAlpha     - ((log.type == LOGTYPE_NORMAL) ? backgroundHoverAlpha : 0.0f);
 			float maxBgAlpha = backgroundHoverAlpha * 2 - ((log.type == LOGTYPE_NORMAL) ? backgroundHoverAlpha : 0.0f);
 
-			float backgroundAlpha = AnimatedFade(GetTime() - log.lastHovered, logFadeTime, maxBgAlpha, minBgAlpha);
+			float backgroundAlpha = (float)AnimatedFade(GetTime() - log.lastHovered, logFadeTime, maxBgAlpha, minBgAlpha);
 
 			DrawRectangle(logBoxXMin, logBoxYMin, logBoxXMax - logBoxXMin, lineHeight, ColorAlpha(backgroundColor, backgroundAlpha));
 
@@ -116,11 +116,11 @@ namespace console
 				logTypeWidth[log.type] = MeasureText(logTypeStr[log.type], 8) + 7;
 			}
 
-			int displayedCount = log.count <= maxLogCount ? log.count : maxLogCount;
+			size_t displayedCount = log.count <= maxLogCount ? log.count : maxLogCount;
 			const char* displayedCountStr = TextFormat(log.count <= maxLogCount ? "(%i)" : "(%i+)", displayedCount);
 			bool shouldDisplayCount = log.count > 1;
 			int displayedCountWidth = shouldDisplayCount ? MeasureText(displayedCountStr, 8) + 8 : 0;
-			int indent = log.indent * logIndentWidth;
+			int indent = (int)log.indent * logIndentWidth;
 			int paddedIndent = indent + consolePaddingX;
 			int logTypeWidthHere = logTypeWidth[log.type];
 
