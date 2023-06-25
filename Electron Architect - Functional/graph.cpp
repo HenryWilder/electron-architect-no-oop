@@ -101,7 +101,18 @@ namespace graph
 		}
 	}
 
-	void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isMousePressed)
+	void DrawMouseTrail(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, float gridDisplaySize)
+	{
+		float gridDisplaySizeHalf = (float)gridDisplaySize * 0.5f;
+
+		Vector2 mouseOldCenter = { mousexOld, mouseyOld };
+		Vector2 mouseMidCenter = { mousexMid, mouseyMid };
+		Vector2 mouseNowCenter = { mousexNow, mouseyNow };
+
+		DrawLineBezierQuad(mouseOldCenter, mouseNowCenter, mouseMidCenter, gridDisplaySize, { 255,255,0, 63 });
+	}
+
+	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover, bool isMousePressed)
 	{
 		Bounds clientBounds = panel::PanelClientBounds(graphPanel);
 
@@ -127,9 +138,20 @@ namespace graph
 
 		if (allowHover)
 		{
-			int hoveredSpaceX = (int)(mousex / gridDisplaySize_WithLine) * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
-			int hoveredSpaceY = (int)(mousey / gridDisplaySize_WithLine) * gridDisplaySize_WithLine;
-			DrawRectangle(hoveredSpaceX, hoveredSpaceY, gridDisplaySize, gridDisplaySize, YELLOW);
+			int hoveredSpaceXNow = (int)(mousexNow / gridDisplaySize_WithLine) * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
+			int hoveredSpaceYNow = (int)(mouseyNow / gridDisplaySize_WithLine) * gridDisplaySize_WithLine;
+			int hoveredSpaceXMid = (int)(mousexMid / gridDisplaySize_WithLine) * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
+			int hoveredSpaceYMid = (int)(mouseyMid / gridDisplaySize_WithLine) * gridDisplaySize_WithLine;
+
+			// Only draw cursor if there is no movement
+			if (hoveredSpaceXNow == hoveredSpaceXMid && hoveredSpaceYNow == hoveredSpaceYMid)
+			{
+				DrawRectangle(hoveredSpaceXNow, hoveredSpaceYNow, gridDisplaySize, gridDisplaySize, { 255,255,0, 127 });
+			}
+			else
+			{
+				DrawMouseTrail(mousexNow, mouseyNow, mousexMid, mouseyMid, mousexOld, mouseyOld, gridDisplaySize);
+			}
 		}
 	}
 }

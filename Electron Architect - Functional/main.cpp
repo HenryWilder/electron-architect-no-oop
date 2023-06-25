@@ -142,6 +142,9 @@ int main()
 
     int mousePrevX{ }, mousePrevY{ };
 
+    int mousePrevXs[32] {};
+    int mousePrevYs[32] {};
+
 #pragma endregion
 
 #pragma region // Loop
@@ -320,7 +323,11 @@ int main()
                     break;
 
                 case PanelID::Graph:
-                    graph::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+                    graph::DrawPanelContents(
+                        mouseCurrX, mouseCurrY,
+                        mousePrevXs[1], mousePrevYs[1],
+                        mousePrevXs[2], mousePrevYs[2],
+                        isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
                     break;
 
                 case PanelID::Tools:
@@ -350,6 +357,18 @@ int main()
 
         mousePrevX = mouseCurrX;
         mousePrevY = mouseCurrY;
+
+        // Push mouse prev
+        // Todo: Change to use circular buffer instead.
+        {
+            for (size_t i = 4; i > 0; --i)
+            {
+                mousePrevXs[i - 1] = mousePrevXs[i - 2];
+                mousePrevYs[i - 1] = mousePrevYs[i - 2];
+            }
+            mousePrevXs[0] = mousePrevX;
+            mousePrevYs[0] = mousePrevY;
+        }
     }
 
 #pragma endregion
@@ -366,6 +385,7 @@ int main()
 #pragma endregion
 }
 
+// Todo: Move this to utils
 int ClampInt(int x, int min, int max)
 {
     return ((x > max) ? (max) : ((x < min) ? (min) : (x)));

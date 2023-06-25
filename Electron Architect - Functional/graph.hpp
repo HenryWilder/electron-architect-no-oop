@@ -20,5 +20,5 @@ namespace graph
 	// This is *added* to the panel's ymin
 	extern int gridOffsetY;
 
-	void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isMousePressed);
+	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover, bool isMousePressed);
 }
