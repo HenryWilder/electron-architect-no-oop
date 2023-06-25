@@ -465,10 +465,10 @@ namespace properties
 						console::Error("properties - Ended prior to beginning");
 					}
 
-					if (xStart < yEnd)
-					{
-						DrawLine(xStart, yStart, xStart, yEnd, color);
-					}
+					// Vertical line
+					DrawLine(xStart, yStart, xStart, yEnd, color);
+
+					// Horizontal line
 					if (xStart < xEnd)
 					{
 						DrawLine(xStart, yEnd, xEnd, yEnd, color);
