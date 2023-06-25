@@ -1,4 +1,5 @@
 #include <cstdarg>
+#include "utils.hpp"
 #include "textfmt.hpp"
 #include "console.hpp"
 #include "properties.hpp"
@@ -53,6 +54,9 @@ namespace properties
 		// Only meaningful on headers
 		// If true, hide everything until the matching closer
 		bool isCollapsed = true;
+
+		// The last time this was hovered - used in animations
+		double lastHovered = 0.0;
 	};
 
 	constexpr size_t MAX_PROPS = 1024;
@@ -81,6 +85,9 @@ namespace properties
 	constexpr int halfHeight     = fontSize / 2;
 	constexpr int halfFontToLine = (lineHeight - fontSize) / 2 + 1; // Half of the difference between the font height and the line height
 	constexpr int closerLineHeight = indentSize;
+
+	// Time taken to complete hover animation
+	constexpr double hoverTransitionTime = 0.25;
 
 	constexpr int propertyPaddingL = 3;
 	constexpr int propertyPaddingR = 3;
@@ -215,6 +222,8 @@ namespace properties
 		}
 #endif
 
+		double currentTime = GetTime();
+
 		panel::Bounds clientBounds = panel::PanelClientBounds(propertiesPanel);
 
 		// End of anything left of the divider 
@@ -265,7 +274,10 @@ namespace properties
 
 #pragma region // Frequently used status checks
 
+				// Shows we just want to read the property
 				const Property& prop = props[i];
+				// Shows we need to modify the property
+				Property& propEditable = props[i];
 
 				// Property has a name
 				bool isPropNamed = !!prop.name;
@@ -422,6 +434,11 @@ namespace properties
 
 					bool isHoverVis = allowHover && isHovering;
 
+					if (isHoverVis)
+					{
+						propEditable.lastHovered = currentTime;
+					}
+
 					/******************************************************************************************
 					* Reasoning for order (assumes logical short circuit and hardware branch prediction):
 					* From left to right, in order of largest population filter to smallest population filter
@@ -459,12 +476,14 @@ namespace properties
 					// This only happens when a name changes, which should be far less frequent than every frame.
 					if (isPropWidthDirty) [[unlikely]]
 					{
-						props[i].nameWidth = MeasureText(prop.name, fontSize);
+						propEditable.nameWidth = MeasureText(prop.name, fontSize);
 					}
 
 					int paddedXMax_Normal = x + prop.nameWidth + propertyPaddingR;
 					int paddedXMax_Hover = xMax + propertyPaddingR;
 
+					double timeSinceHover = currentTime - prop.lastHovered;
+					bool isInAnimationTransition = !isHoverVis && timeSinceHover < hoverTransitionTime;
 
 					int paddedXMin = x - propertyPaddingL;
 					int paddedYMin = y - propertyPaddingT;
@@ -472,8 +491,15 @@ namespace properties
 
 					// Nameless, unhovered property backgrounds will appear the same as those whose name is an empty string.
 
+					// Whether this is likely or unlikely is unpredictable.
+					if (isInAnimationTransition)
+					{
+						int paddedXMax_Animated = AnimatedFade(timeSinceHover, hoverTransitionTime, paddedXMax_Hover, paddedXMax_Normal);
+						paddedXMax = paddedXMax_Animated;
+					}
 					// Even if hover is allowed and true, only one property will ever be hovered at a time.
-					if (isHoverVis) [[unlikely]]
+					// Implies the transition has finished.
+					else if (isHoverVis) [[unlikely]]
 					{
 						paddedXMax = paddedXMax_Hover;
 					}
@@ -494,7 +520,7 @@ namespace properties
 					if (isUserCollapsingProp) [[unlikely]]
 					{
 						console::Log("Header collapse toggled");
-						props[i].isCollapsed = !prop.isCollapsed;
+						propEditable.isCollapsed = !prop.isCollapsed;
 					}
 				}
 

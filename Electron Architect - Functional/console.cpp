@@ -4,17 +4,12 @@ extern "C"
 {
 	#include "logtypes.h"
 }
+#include "utils.hpp"
 #include "textfmt.hpp"
 #include "console.hpp"
 #include "properties.hpp"
 #pragma warning( push )
 #pragma warning( disable : 26812 )
-
-float EaseInOut(float t)
-{
-	float sqt = t * t;
-	return sqt / (2.0 * (sqt - t) + 1.0f);
-}
 
 namespace console
 {
@@ -111,7 +106,8 @@ namespace console
 
 			float minBgAlpha = backgroundHoverAlpha     - ((log.type == LOGTYPE_NORMAL) ? backgroundHoverAlpha : 0.0f);
 			float maxBgAlpha = backgroundHoverAlpha * 2 - ((log.type == LOGTYPE_NORMAL) ? backgroundHoverAlpha : 0.0f);
-			float backgroundAlpha = Lerp(maxBgAlpha, minBgAlpha, EaseInOut(Clamp((float)((GetTime() - log.lastHovered) / logFadeTime), 0.0f, 1.0f)));
+
+			float backgroundAlpha = AnimatedFade(GetTime() - log.lastHovered, logFadeTime, maxBgAlpha, minBgAlpha);
 
 			DrawRectangle(logBoxXMin, logBoxYMin, logBoxXMax - logBoxXMin, lineHeight, ColorAlpha(backgroundColor, backgroundAlpha));
 

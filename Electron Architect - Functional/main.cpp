@@ -110,6 +110,12 @@ int main()
             properties::AddString("Multiline", "Apple\nOrange\nBanana");
             properties::AddLinkedInt("Linked", "%5i", &testNumber);
             properties::AddLinkedString("Side of screen", "%s", &testString);
+            properties::AddMapHeader("Map 3.2"); {
+                properties::AddInt("apple", 234);
+                properties::AddInt("orange", 653564);
+                properties::AddInt("banana", 554);
+                properties::AddInt("mango", 43547);
+            } properties::AddCloser();
             properties::AddObjectHeader("Collection 3.2"); {
                 properties::AddString("Hello", ":3");
                 properties::Addf_hint("Formatted", 9, PropValueType::Int, "0x%06x", 543634);

@@ -193,6 +193,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="textfmt.cpp" />
     <ClCompile Include="tools.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -200,6 +201,7 @@
   <ItemGroup>
     <ClInclude Include="console.hpp" />
     <ClInclude Include="graph.hpp" />
+    <ClInclude Include="utils.hpp" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="logtypes.h" />
     <ClInclude Include="panel.hpp" />
