@@ -86,8 +86,12 @@ namespace properties
 	constexpr int halfFontToLine = (lineHeight - fontSize) / 2 + 1; // Half of the difference between the font height and the line height
 	constexpr int closerLineHeight = indentSize;
 
-	// Time taken to complete hover animation
-	constexpr double hoverTransitionTime = 0.25;
+	// Pixels of transition completed per second
+	// Note that this will be bracketed
+	// i.e., this will be dependent on panel width at fixed increments
+	constexpr double hoverTransitionSpeed = 400;
+	// Size of brackets at which hover transition speed is multiplied linearly in steps
+	constexpr int hoverTransitionBracketWidth = 600;
 
 	constexpr int propertyPaddingL = 3;
 	constexpr int propertyPaddingR = 3;
@@ -222,16 +226,21 @@ namespace properties
 		}
 #endif
 
-		double currentTime = GetTime();
+		const double currentTime = GetTime();
 
-		panel::Bounds clientBounds = panel::PanelClientBounds(propertiesPanel);
+		const panel::Bounds clientBounds = panel::PanelClientBounds(propertiesPanel);
+
+		const int panelWidth = clientBounds.xmax - clientBounds.xmin;
+		const int panelWidthBracket = 1 + (panelWidth / hoverTransitionBracketWidth);
+		const double hoverTransitionSpeed_Contextual = (double)hoverTransitionSpeed * panelWidthBracket;
 
 		// End of anything left of the divider 
-		int dividerXStart = clientBounds.xmin + dividerX - panelPaddingX;
-		// Start of anything right of the divider
-		int dividerXEnd = dividerXStart + dividerWidth + panelPaddingX;
+		const int dividerXStart = clientBounds.xmin + dividerX - panelPaddingX;
 
-		int xBaseline = clientBounds.xmin + panelPaddingX;
+		// Start of anything right of the divider
+		const int dividerXEnd = dividerXStart + dividerWidth + panelPaddingX;
+
+		const int xBaseline = clientBounds.xmin + panelPaddingX;
 
 		xMax = clientBounds.xmax - panelPaddingX;
 
@@ -483,7 +492,8 @@ namespace properties
 					int paddedXMax_Hover = xMax + propertyPaddingR;
 
 					double timeSinceHover = currentTime - prop.lastHovered;
-					bool isInAnimationTransition = !isHoverVis && timeSinceHover < hoverTransitionTime;
+					double fadeDuration = GetAnimatedFadeDuration(hoverTransitionSpeed_Contextual, paddedXMax_Hover, paddedXMax_Normal);
+					bool isInAnimationTransition = !isHoverVis && timeSinceHover < fadeDuration;
 
 					int paddedXMin = x - propertyPaddingL;
 					int paddedYMin = y - propertyPaddingT;
@@ -494,7 +504,7 @@ namespace properties
 					// Whether this is likely or unlikely is unpredictable.
 					if (isInAnimationTransition)
 					{
-						int paddedXMax_Animated = AnimatedFade(timeSinceHover, hoverTransitionTime, paddedXMax_Hover, paddedXMax_Normal);
+						int paddedXMax_Animated = AnimatedFade(timeSinceHover, fadeDuration, paddedXMax_Hover, paddedXMax_Normal);
 						paddedXMax = paddedXMax_Animated;
 					}
 					// Even if hover is allowed and true, only one property will ever be hovered at a time.

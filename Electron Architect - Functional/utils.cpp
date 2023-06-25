@@ -21,11 +21,30 @@ double LerpDouble(double a, double b, double amount)
 	return result;
 }
 
+double GetAnimatedFadeDuration(double fadeSpeed, double startValue, double endValue)
+{
+	double minValue, maxValue;
+	if (startValue < endValue)
+	{
+		minValue = startValue;
+		maxValue = endValue;
+	}
+	else
+	{
+		minValue = endValue;
+		maxValue = startValue;
+	}
+
+	double fadeWidth = maxValue - minValue;
+	double totalFadeTimeNeeded = fadeWidth / fadeSpeed;
+	return totalFadeTimeNeeded;
+}
+
 double AnimatedFade(double timeSinceHover, double fadePeriod, double startValue, double endValue)
 {
 	double fadePercent = timeSinceHover / fadePeriod;
 	double fadePercentSaturated = ClampDouble(fadePercent, 0.0, 1.0);
 	double easedFadePercent = EaseInOut(fadePercentSaturated);
-	double result = LerpDouble(startValue, endValue, (float)easedFadePercent);
+	double result = LerpDouble(startValue, endValue, easedFadePercent);
 	return result;
 }
