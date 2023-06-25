@@ -80,6 +80,8 @@ namespace properties
 	constexpr int fontSize       = 8;
 	constexpr int halfHeight     = fontSize / 2;
 	constexpr int halfFontToLine = (lineHeight - fontSize) / 2 + 1; // Half of the difference between the font height and the line height
+	constexpr int closerLineHeight = lineHeight / 2;
+	constexpr int closerVisualOffset = closerLineHeight / 2; // y-offset of the closer line from the start of its property line
 
 	constexpr int propertyPaddingL = 3;
 	constexpr int propertyPaddingR = 3;
@@ -303,6 +305,10 @@ namespace properties
 					numLines = CountNewlines(*(const char* const*)prop.value);
 				}
 				int yNext = y + lineHeight * numLines;
+				if (type == PropertyType::Closer)
+				{
+					yNext = y + closerLineHeight;
+				}
 				lineHeights[i] = yNext;
 
 				bool isHovering =
@@ -396,7 +402,7 @@ namespace properties
 				int xEnd = xMax;
 
 				int yStart = indentInfo.yStart - halfFontToLine;
-				int yEnd = y + lineHeight / 2;
+				int yEnd = y;
 
 				// Uncollapsed properties with collapsed nested properties seem to trigger this
 				if (yStart > yEnd)
