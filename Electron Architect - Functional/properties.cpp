@@ -466,7 +466,10 @@ namespace properties
 					}
 
 					// Vertical line
-					DrawLine(xStart, yStart, xStart, yEnd, color);
+					if (yStart < yEnd)
+					{
+						DrawLine(xStart, yStart, xStart, yEnd, color);
+					}
 
 					// Horizontal line
 					if (xStart < xEnd)
