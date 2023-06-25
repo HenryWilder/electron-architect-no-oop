@@ -94,6 +94,14 @@ namespace properties
     // Adds a linked boolean property
     void AddLinkedBool(const char* name, const bool* valueSrcPtr);
 
+    // Adds an expression property
+    // Note: Prefer using anything else if possible. This evaluates the expression lambda every time the property is drawn.
+    // ! Do not use the expression evaluation as actual execution code. Expressions are not evaluated when their containing collections are collapsed.
+    template<typename Func> void AddLinkedExpression(const char* name, Func expression)
+    {
+        static_assert(false, "Linked Expressions are not yet supported.");
+    }
+
     // Indents following properties
     void AddHeader(const char* name, PropCollectionType type);
 

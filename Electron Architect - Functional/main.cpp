@@ -67,7 +67,10 @@ int main()
     console::Assert(false, "Hello");
 
     int propertiesPanelWidth = 0;
-    properties::AddLinkedInt("Properties panel width", "%i",  & propertiesPanelWidth);
+    properties::AddObjectHeader("PropertiesPanel"); {
+        properties::AddLinkedInt("width", "%i", &propertiesPanelWidth);
+    } properties::AddCloser();
+
     properties::AddInt("Int 1", 55234);
     properties::AddInt("Long long 1", 23542346434534ll);
     properties::AddFloat("Float 1", 243.34782f);
