@@ -306,7 +306,7 @@ int main()
                     break;
 
                 case PanelID::Properties:
-                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, mousePrevY, isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
                     break;
 
                 case PanelID::Graph:

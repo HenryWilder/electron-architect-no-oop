@@ -201,7 +201,7 @@ namespace properties
 		}
 	}
 
-	void DrawPanelContents(int mousex, int mousey, bool allowHover, bool isPressed)
+	void DrawPanelContents(int mousex, int mousey, int mouseyPrev, bool allowHover, bool isPressed)
 	{
 #if _DEBUG
 		// Check for unbalanced collections
@@ -227,6 +227,21 @@ namespace properties
 #endif
 
 		const double currentTime = GetTime();
+		const double previousFrameTime = currentTime - (double)GetFrameTime();
+
+		int mouseyMin, mouseyMax;
+		{
+			if (mousey < mouseyPrev)
+			{
+				mouseyMin = mousey;
+				mouseyMax = mouseyPrev;
+			}
+			else
+			{
+				mouseyMin = mouseyPrev;
+				mouseyMax = mousey;
+			}
+		}
 
 		const panel::Bounds clientBounds = panel::PanelClientBounds(propertiesPanel);
 
@@ -436,49 +451,26 @@ namespace properties
 				// Draw background for hovered/named properties
 				if (isPropNamed || isPropHoverable)
 				{
-					// Must come after yNext has been calculated
-					bool isHovering =
-						x <= mousex && mousex <= xMax &&
-						y <= mousey && mousey < yNext;
+					bool isInHorizontalBounds = x <= mousex && mousex <= xMax;
+					bool isInVerticalBounds = y <= mousey && mousey < yNext;
+
+					bool isHovering = isInHorizontalBounds && isInVerticalBounds;
+
+					// Mouse would have hovered this property within the last frame if it was tracked continously
+					bool isVirtuallyInVerticalBounds = mouseyMin <= y && (yNext - 1) <= mouseyMax;
+					bool isVirtuallyHovered = isInHorizontalBounds && isVirtuallyInVerticalBounds;
 
 					bool isHoverVis = allowHover && isHovering;
+					bool isVirtualHoverVis = allowHover && isVirtuallyHovered;
 
 					if (isHoverVis)
 					{
 						propEditable.lastHovered = currentTime;
 					}
-
-					/******************************************************************************************
-					* Reasoning for order (assumes logical short circuit and hardware branch prediction):
-					* From left to right, in order of largest population filter to smallest population filter
-					* (e.g. leftmost excludes 90% of cases, rightmost excludes remaining 1% of cases)
-					* 
-					* 1. isPressed
-					* It is extremely rare that the user is even trying to click at all. At 60fps, if the
-					* user clicks even 2-3 times per second, that's still 57-58 calls where there is absolutely
-					* no sense in thinking the user might be trying to collapse the property.
-					* 
-					* This case is at whole-function scope.
-					* 
-					* 2. allowHover
-					* If the entire draw function is not allowed to hover, there is no reason to think that
-					* the user is trying, nor even able, to collapse the property.
-					* 
-					* This case is at whole-function scope.
-					* 
-					* 3. isHovering
-					* At most one property out of the entire panel will ever be hovered at a time. If we
-					* already know this one isn't being hovered, it doesn't even matter whether the
-					* property is collapsable or not.
-					* 
-					* This case is at per-property scope.
-					* 
-					* 4. isPropCollapsable
-					* If the property is not collapsable, it's not collapsable.
-					* 
-					* This case is at per-property scope.
-					* 
-					******************************************************************************************/
+					else if (isVirtualHoverVis)
+					{
+						propEditable.lastHovered = previousFrameTime;
+					}
 
 					bool isUserCollapsingProp = isPressed && isHoverVis && isPropCollapsable;
 					
