@@ -252,36 +252,96 @@ namespace properties
 
 			for (size_t i = 0; i < numProps; ++i)
 			{
-				if (y > clientBounds.ymax)
+				bool canIndexPrevious = i != 0;
+
+				// Early exit when client bounds are exceeded
+				// Only happens once per frame, and not even necessarily every frame.
+				if (y > clientBounds.ymax) [[unlikely]]
 				{
 					drawableProperties = i;
 					break;
 				}
 
-				const Property& prop = props[i];
-				PropertyType type = (PropertyType)((((char)!!prop.name) << 1) | ((char)!!prop.value));
+				// All things past this point are implied to be above the client ymax and potentially visible.
 
-				if (hideUntilIndent != -1)
+#pragma region // Frequently used status checks
+
+				const Property& prop = props[i];
+
+				// Property has a name
+				bool isPropNamed = !!prop.name;
+
+				// Property has a value
+				bool isPropValued = !!prop.value;
+
+				// Property is linked
+				// Implies
+				// - Property has fmt
+				bool isPropLinked = !!prop.fmt;
+
+				const PropertyType type = (PropertyType)((((char)isPropNamed) << 1) | ((char)isPropValued));
+
+				// Implies
+				// - Property is named
+				// - Property is NOT valued
+				bool isPropHeader  = type == PropertyType::Header;
+
+				// Implies
+				// - Property is NOT named
+				// - Property is NOT valued
+				bool isPropCloser  = type == PropertyType::Closer;
+
+				// Implies
+				// - Property is named
+				// - Property is valued
+				bool isPropRegular = type == PropertyType::Regular;
+
+#pragma endregion
+
+				// Implies
+				// - A collapsed header has been encountered at some point in a past iteration
+				// - The indentation has not yet returned to that of the afformentioned header
+				bool isInCollapsedSection = hideUntilIndent != -1;
+
+				if (isInCollapsedSection)
 				{
-					if (type == PropertyType::Header)
+					if (isPropHeader)
 					{
 						indent += indentSize;
 					}
 
-					if (type == PropertyType::Closer)
+					else if (isPropCloser)
 					{
 						indent -= indentSize;
-						if (indent == hideUntilIndent)
+
+						// Gets set AFTER unindent.
+						// Implies
+						// - Property is closer
+						// - Property is inside a collapsed collection
+						bool isReadyForUnhide = indent == hideUntilIndent;
+
+						// It's hard to determine whether this is likely or unlikely.
+						// Exactly one closer per collection will meet this condition.
+						// 
+						// On one hand, all closers within flat collections (not containing sub-collections)
+						// are 100% guaranteed to meet this condition.
+						// 
+						// On the other hand, the more sub collections inside a collapsed collection,
+						// the more closers there are that do not meet this condition.
+						if (isReadyForUnhide)
 						{
 							hideUntilIndent = -1;
 						}
 					}
 
-					if (i != 0) [[likely]]
+					// All but the first index meet this condition
+					if (canIndexPrevious) [[likely]]
 					{
 						lineHeights[i] = lineHeights[i - 1];
 					}
-					else [[unlikely]] // Special case that would only even happen once in a draw anyway
+					// Unlikely edge case - would require the first property to be a header and also collapsed
+					// Even in that case, would only even happen once per draw
+					else [[unlikely]]
 					{
 						lineHeights[i] = 0;
 					}
@@ -289,84 +349,172 @@ namespace properties
 					continue;
 				}
 
-				bool isHoverableProperty = type != PropertyType::Closer;
+				// All things after this point are implied to NOT be within a collapsed section and therefore definitely visible.
+
+#pragma region // Additional booleans that aren't necessary for skippable properties
+
+				// Implies
+				// - Property is NOT a closer
+				bool isPropHoverable = !isPropCloser;
+
+				// Implies
+				// - Property has a value
+				bool isPropUnlinked = isPropValued && !isPropLinked;
+
+				// Implies
+				// - Property has a value
+				// - Property is linked
+				bool isPropLinkedString = isPropValued && isPropLinked && prop.valueType == PropValueType::String;
+
+				// Implies
+				// - Property is named
+				bool isPropWidthDirty = isPropNamed && prop.nameWidth == -1;
+
+				// Implies
+				// - Property is a header
+				bool isPropCollapsable = isPropHeader;
+
+#pragma endregion
 
 				int x = xBaseline + indent;
 
 				Color color = GetPropertyAccentColor(type, prop);
 
-				int numLines = 1;
-				if (prop.value && !prop.fmt)
+				// The height of the current property
+				int propHeight;
 				{
-					numLines = CountNewlines((const char*)prop.value);
-				}
-				else if (prop.value && prop.fmt && prop.valueType == PropValueType::String)
-				{
-					numLines = CountNewlines(*(const char* const*)prop.value);
-				}
-				int yNext = y + lineHeight * numLines;
-				if (type == PropertyType::Closer)
-				{
-					yNext = y + closerLineHeight;
-				}
-				lineHeights[i] = yNext;
-
-				bool isHovering =
-					x <= mousex && mousex <= xMax &&
-					y <= mousey && mousey < yNext;
-
-				if (isHoverableProperty)
-				{
-					bool isHoverVis = allowHover && isHovering;
-					bool isNamedProp = !!prop.name; // This might be redundant, as all hoverable properties are named.
-
-					if (isHoverVis || isNamedProp)
+					if (isPropCloser)
 					{
-						int paddedXMin = x - propertyPaddingL;
-						int paddedYMin = y - propertyPaddingT;
-						int paddedXMax;
-						// Even if hover is allowed and true, only one property will ever be hovered at a time.
-						if (isHoverVis) [[unlikely]]
+						propHeight = closerLineHeight;
+					}
+					else if (isPropValued)
+					{
+						int numLines = 1;
 						{
-							paddedXMax = xMax + propertyPaddingR;
-						}
-						// Only closers won't have a name.
-						else /* (isNamedProp) */ [[likely]]
-						{
-							// This only happens when a name changes, which should be far less frequent than every frame.
-							if (prop.nameWidth == -1) [[unlikely]]
+							if (isPropUnlinked || isPropLinkedString)
 							{
-								props[i].nameWidth = MeasureText(prop.name, fontSize);
+								const char* textToMeasure = isPropUnlinked
+									?  (const char*       )prop.value
+									: *(const char* const*)prop.value;
+
+								numLines = CountNewlines(textToMeasure);
 							}
-
-							paddedXMax = x + prop.nameWidth + propertyPaddingR;
 						}
-						int paddedYMax = yNext + propertyPaddingB;
-						int paddedW = paddedXMax - paddedXMin;
-						int paddedH = paddedYMax - paddedYMin;
 
-						DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
-
-						// Already only one property will ever be hovered at a time.
-						// And on top of that, the user will be pressing m1 a lot less frequently than the visuals are drawn.
-						if (isHoverVis && type == PropertyType::Header && isPressed) [[unlikely]]
-						{
-							console::Log("Header collapse toggled");
-							props[i].isCollapsed = !prop.isCollapsed;
-						}
+						propHeight = lineHeight * numLines;
+					}
+					else
+					{
+						propHeight = lineHeight;
 					}
 				}
 
-				if (type == PropertyType::Header && prop.isCollapsed)
+				int yNext = y + propHeight;
+
+				lineHeights[i] = yNext;
+
+				// Draw background for hovered/named properties
+				if (isPropNamed || isPropHoverable)
+				{
+					// Must come after yNext has been calculated
+					bool isHovering =
+						x <= mousex && mousex <= xMax &&
+						y <= mousey && mousey < yNext;
+
+					bool isHoverVis = allowHover && isHovering;
+
+					/******************************************************************************************
+					* Reasoning for order (assumes logical short circuit and hardware branch prediction):
+					* From left to right, in order of largest population filter to smallest population filter
+					* (e.g. leftmost excludes 90% of cases, rightmost excludes remaining 1% of cases)
+					* 
+					* 1. isPressed
+					* It is extremely rare that the user is even trying to click at all. At 60fps, if the
+					* user clicks even 2-3 times per second, that's still 57-58 calls where there is absolutely
+					* no sense in thinking the user might be trying to collapse the property.
+					* 
+					* This case is at whole-function scope.
+					* 
+					* 2. allowHover
+					* If the entire draw function is not allowed to hover, there is no reason to think that
+					* the user is trying, nor even able, to collapse the property.
+					* 
+					* This case is at whole-function scope.
+					* 
+					* 3. isHovering
+					* At most one property out of the entire panel will ever be hovered at a time. If we
+					* already know this one isn't being hovered, it doesn't even matter whether the
+					* property is collapsable or not.
+					* 
+					* This case is at per-property scope.
+					* 
+					* 4. isPropCollapsable
+					* If the property is not collapsable, it's not collapsable.
+					* 
+					* This case is at per-property scope.
+					* 
+					******************************************************************************************/
+
+					bool isUserCollapsingProp = isPressed && isHoverVis && isPropCollapsable;
+					
+					// This only happens when a name changes, which should be far less frequent than every frame.
+					if (isPropWidthDirty) [[unlikely]]
+					{
+						props[i].nameWidth = MeasureText(prop.name, fontSize);
+					}
+
+					int paddedXMax_Normal = x + prop.nameWidth + propertyPaddingR;
+					int paddedXMax_Hover = xMax + propertyPaddingR;
+
+
+					int paddedXMin = x - propertyPaddingL;
+					int paddedYMin = y - propertyPaddingT;
+					int paddedXMax = x + propertyPaddingR;
+
+					// Nameless, unhovered property backgrounds will appear the same as those whose name is an empty string.
+
+					// Even if hover is allowed and true, only one property will ever be hovered at a time.
+					if (isHoverVis) [[unlikely]]
+					{
+						paddedXMax = paddedXMax_Hover;
+					}
+					// Only closers won't have a name.
+					else if (isPropNamed) [[likely]]
+					{
+						paddedXMax = paddedXMax_Normal;
+					}
+
+					int paddedYMax = yNext + propertyPaddingB;
+					int paddedW = paddedXMax - paddedXMin;
+					int paddedH = paddedYMax - paddedYMin;
+
+					DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
+
+					// Already only one property will ever be hovered at a time.
+					// And on top of that, the user will be pressing m1 a lot less frequently than the visuals are drawn.
+					if (isUserCollapsingProp) [[unlikely]]
+					{
+						console::Log("Header collapse toggled");
+						props[i].isCollapsed = !prop.isCollapsed;
+					}
+				}
+
+				// Gets set AFTER user has potentially toggled the collapsed state of the property.
+				// Implies
+				// - Property is a header
+				// - This property in particular is collapsed, not just within a collapsed collection
+				bool isPropCollapsedHeader = isPropHeader && prop.isCollapsed;
+
+				if (isPropCollapsedHeader)
 				{
 					hideUntilIndent = indent;
 				}
 
 				switch (type)
 				{
-				case PropertyType::Closer:  DrawCloserProperty(indent, x, y); break;
-				case PropertyType::Header:  DrawHeaderProperty(indent, x, y, prop); break;
-				case PropertyType::Regular: DrawRegularProperty(x, y, prop, dividerXEnd); break;
+				case PropertyType::Closer:  DrawCloserProperty (indent, x, y                   ); break;
+				case PropertyType::Header:  DrawHeaderProperty (indent, x, y, prop             ); break;
+				case PropertyType::Regular: DrawRegularProperty(        x, y, prop, dividerXEnd); break;
 				}
 
 				y = yNext;
