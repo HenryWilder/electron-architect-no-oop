@@ -405,7 +405,7 @@ namespace properties
 				int indent = (indentDepth - 1) * indentSize;
 				int indentComplete = xBaseline + indent;
 
-				if (type == PropertyType::Header)
+				if (!isCollapsedValue && type == PropertyType::Header)
 				{
 				 	Color color = GetCollectionAccentColor(prop.collectionType);
 				 
