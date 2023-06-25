@@ -79,7 +79,7 @@ namespace properties
 
 	constexpr int indentSize = 8;
 
-	constexpr int panelPaddingX  = 6;
+	constexpr int panelPaddingX  = 5;
 	constexpr int panelPaddingY  = 5;
 	constexpr int fontSize       = 8;
 	constexpr int halfHeight     = fontSize / 2;

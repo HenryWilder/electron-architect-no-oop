@@ -44,10 +44,29 @@ namespace graph
 	void Zoom(int amount)
 	{
 		gridMagnitude -= amount;
-		if (-gridMagnitude > gridSize)
+		if (gridMagnitude > gridSize)
+		{
+			gridMagnitude = gridSize;
+		}
+		if (gridMagnitude < -gridSize)
 		{
 			gridMagnitude = -gridSize;
 		}
+
+#if _DEBUG && false
+		if (gridMagnitude > 0)
+		{
+			console::Logf("Zoomed to x/%i", (gridMagnitude + 1));
+		}
+		else if (gridMagnitude < 0)
+		{
+			console::Logf("Zoomed to %ix", (-gridMagnitude + 1));
+		}
+		else // gridMagnitude == 0
+		{
+			console::Log("Zoomed to 1x");
+		}
+#endif
 	}
 
 	int gridOffsetX = 0;
@@ -105,5 +124,12 @@ namespace graph
 		int gridDisplaySize_WithLine = gridDisplaySize + gridlineWidth;
 
 		DrawGrid(clientBounds, clientRect, gridDisplaySize, gridDisplaySize_WithLine);
+
+		if (allowHover)
+		{
+			int hoveredSpaceX = (int)(mousex / gridDisplaySize_WithLine) * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
+			int hoveredSpaceY = (int)(mousey / gridDisplaySize_WithLine) * gridDisplaySize_WithLine;
+			DrawRectangle(hoveredSpaceX, hoveredSpaceY, gridDisplaySize, gridDisplaySize, YELLOW);
+		}
 	}
 }

@@ -178,10 +178,10 @@ namespace panel
     Bounds PanelClientBounds(const Panel& panel)
     {
         Bounds clientBounds;
-        clientBounds.xmin = panel.bounds.xmin + borderWidth;
+        clientBounds.xmin = panel.bounds.xmin + borderWidth + 1;
         clientBounds.ymin = panel.bounds.ymin + panelTitlebarHeight;
-        clientBounds.xmax = panel.bounds.xmax - borderWidth;
-        clientBounds.ymax = panel.bounds.ymax - borderWidth;
+        clientBounds.xmax = panel.bounds.xmax - borderWidth + 1;
+        clientBounds.ymax = panel.bounds.ymax - borderWidth + 1;
         return clientBounds;
     }
 
