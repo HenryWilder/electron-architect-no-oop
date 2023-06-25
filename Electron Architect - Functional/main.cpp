@@ -272,8 +272,9 @@ int main()
         // Scroll within properties panel
         if (!hoverDisabled && currentlyWithin == &propertiesPanel)
         {
+            constexpr int linesPerScroll = 4;
             float amount = GetMouseWheelMove();
-            properties::scrollY -= (int)(amount) * properties::lineHeight;
+            properties::scrollY -= (int)(amount) * properties::lineHeight * linesPerScroll;
             if (properties::scrollY < 0)
             {
                 properties::scrollY = 0;
@@ -321,7 +322,7 @@ int main()
 
             panel::DrawPanelForeground(currentPanel);
 
-#if _DEBUG // Debug panel interactability with mouse
+#if _DEBUG && false // Debug panel interactability with mouse
             if (!isWithinThisPanel) [[likely]] // Only one panel at a time ever has the mouse within it
             {
                 panel::Rect rect;

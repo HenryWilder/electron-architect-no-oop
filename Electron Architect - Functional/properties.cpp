@@ -201,6 +201,67 @@ namespace properties
 		}
 	}
 
+
+	struct Indent
+	{
+		PropCollectionType type;
+		int yStart;
+	};
+
+	// We draw the indent line when popping off the stack
+	Indent indentStack[32] = {};
+	// Current size of the indent stack
+	size_t indentDepth = 0;
+
+	void PushIndentStack(PropCollectionType type, int y)
+	{
+		Indent indentInfo = 
+		{
+			.type = type,
+			.yStart = y,
+		};
+
+		indentStack[indentDepth++] = indentInfo;
+	}
+
+	// Also handles drawing the item
+	void PopIndentStack(int indentComplete, int y)
+	{
+		if (indentDepth == 0)
+		{
+			console::Error("properties - Collection popped when no collections remained");
+			return;
+		}
+
+		Indent indentInfo = indentStack[--indentDepth];
+
+		Color color = GetCollectionAccentColor(indentInfo.type);
+
+		int xStart = indentComplete;
+		int xEnd = xMax;
+
+		int yStart = indentInfo.yStart - halfFontToLine;
+		int yEnd = y;
+
+		// Uncollapsed properties with collapsed nested properties seem to trigger this
+		if (yStart > yEnd)
+		{
+			console::Error("properties - Ended prior to beginning");
+		}
+
+		// Vertical line
+		if (yStart < yEnd)
+		{
+			DrawLine(xStart, yStart, xStart, yEnd, color);
+		}
+
+		// Horizontal line
+		if (xStart < xEnd)
+		{
+			DrawLine(xStart, yEnd, xEnd, yEnd, color);
+		}
+	};
+
 	void DrawPanelContents(int mousex, int mousey, int mouseyPrev, bool allowHover, bool isPressed)
 	{
 #if _DEBUG
@@ -267,10 +328,12 @@ namespace properties
 		// Stored in first pass for use in second pass.
 		size_t drawableProperties = numProps;
 
+		const int startY = clientBounds.ymin + panelPaddingY - scrollY;
+
 		// Pass 1: Draw property text and info
 		{
 			// Running y position in pixels
-			int y = clientBounds.ymin + panelPaddingY - scrollY;
+			int y = startY;
 
 			// Current line's indentation in pixels.
 			// Does not include panel xmin.
@@ -550,61 +613,15 @@ namespace properties
 
 		// Pass 2: Collection grouping lines
 		{
-			struct Indent
-			{
-				PropCollectionType type;
-				int yStart;
-			};
-
-			// We draw the indent line when popping off the stack
-			Indent indentStack[32] = {};
-
-			// Current size of the indent stack
-			size_t indentDepth = 0;
-
-			int lineHeightPrev = clientBounds.ymin + panelPaddingY;
-
-			auto pop = [&indentDepth, &indentStack](int indentComplete, int y)
-			{
-				if (indentDepth == 0)
-				{
-					console::Error("properties - Collection popped when no collections remained");
-					return;
-				}
-
-				Indent indentInfo = indentStack[--indentDepth];
-
-				Color color = GetCollectionAccentColor(indentInfo.type);
-
-				int xStart = indentComplete;
-				int xEnd = xMax;
-
-				int yStart = indentInfo.yStart - halfFontToLine;
-				int yEnd = y;
-
-				// Uncollapsed properties with collapsed nested properties seem to trigger this
-				if (yStart > yEnd)
-				{
-					console::Error("properties - Ended prior to beginning");
-				}
-
-				// Vertical line
-				if (yStart < yEnd)
-				{
-					DrawLine(xStart, yStart, xStart, yEnd, color);
-				}
-
-				// Horizontal line
-				if (xStart < xEnd)
-				{
-					DrawLine(xStart, yEnd, xEnd, yEnd, color);
-				}
-			};
+			int lineHeightPrev = startY;
 
 			for (size_t i = 0; i < drawableProperties; ++i)
 			{
 				const Property& prop = props[i];
 				PropertyType type = (PropertyType)((((char)!!prop.name) << 1) | ((char)!!prop.value));
+
+				bool isPropHeader = type == PropertyType::Header;
+				bool isPropCloser = type == PropertyType::Closer;
 
 				int lineHeightCurr = lineHeights[i];
 
@@ -619,14 +636,14 @@ namespace properties
 				}
 
 				// A collapsed header does not contribute to indentation
-				bool isCollapsedHeader = type == PropertyType::Header && prop.isCollapsed;
+				bool isCollapsedHeader = isPropHeader && prop.isCollapsed;
 
 				bool isCollapsedProp = isCollapsedValue || isCollapsedHeader;
 				
 				int indent = (indentDepth - 1) * indentSize;
 				int indentComplete = xBaseline + indent;
 
-				if (!isCollapsedValue && type == PropertyType::Header)
+				if (!isCollapsedValue && isPropHeader)
 				{
 				 	Color color = GetCollectionAccentColor(prop.collectionType);
 				 
@@ -650,21 +667,15 @@ namespace properties
 				}
 
 				// Push
-				if (type == PropertyType::Header)
+				if (isPropHeader)
 				{
-					Indent indentInfo = 
-					{
-						.type = prop.collectionType,
-						.yStart = lineHeightCurr,
-					};
-
-					indentStack[indentDepth++] = indentInfo;
+					PushIndentStack(prop.collectionType, lineHeightCurr);
 				}
 
 				// Pop
-				else if (type == PropertyType::Closer)
+				else if (isPropCloser)
 				{
-					pop(indentComplete, y);
+					PopIndentStack(indentComplete, y);
 				}
 			}
 
@@ -674,7 +685,7 @@ namespace properties
 				int indent = (indentDepth - 1) * indentSize;
 				int indentComplete = xBaseline + indent;
 				int y = propertiesPanel.bounds.ymax;
-				pop(indentComplete, y);
+				PopIndentStack(indentComplete, y);
 			}
 		}
 
