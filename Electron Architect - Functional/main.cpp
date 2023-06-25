@@ -269,15 +269,24 @@ int main()
             console::CalculateDisplayableLogCount(); // Call once per tick, while panels move
         }
 
-        // Scroll within properties panel
-        if (!hoverDisabled && currentlyWithin == &propertiesPanel)
+        int scrollAmount = (int)GetMouseWheelMove();
+        if (!hoverDisabled && scrollAmount != 0)
         {
-            constexpr int linesPerScroll = 4;
-            float amount = GetMouseWheelMove();
-            properties::scrollY -= (int)(amount) * properties::lineHeight * linesPerScroll;
-            if (properties::scrollY < 0)
+            // Scroll within properties panel
+            if (currentlyWithin->id == PanelID::Properties)
             {
-                properties::scrollY = 0;
+                constexpr int linesPerScroll = 4;
+                properties::scrollY -= scrollAmount * properties::lineHeight * linesPerScroll;
+                if (properties::scrollY < 0)
+                {
+                    properties::scrollY = 0;
+                }
+            }
+
+            // Scroll within graph panel
+            if (currentlyWithin->id == PanelID::Graph)
+            {
+                graph::Zoom(scrollAmount);
             }
         }
 
@@ -311,7 +320,7 @@ int main()
                     break;
 
                 case PanelID::Graph:
-                    graph::DrawPanelContents();
+                    graph::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
                     break;
 
                 case PanelID::Tools:
