@@ -317,40 +317,43 @@ namespace properties
 
 				if (isHoverableProperty)
 				{
-					if (allowHover && isHovering) [[unlikely]] // Even if hover is allowed and true, only one property will ever be hovered at a time.
+					bool isHoverVis = allowHover && isHovering;
+					bool isNamedProp = !!prop.name; // This might be redundant, as all hoverable properties are named.
+
+					if (isHoverVis || isNamedProp)
 					{
 						int paddedXMin = x - propertyPaddingL;
 						int paddedYMin = y - propertyPaddingT;
-						int paddedXMax = xMax + propertyPaddingR;
-						int paddedYMax = yNext + propertyPaddingB;
+						int paddedXMax;
+						// Even if hover is allowed and true, only one property will ever be hovered at a time.
+						if (isHoverVis) [[unlikely]]
+						{
+							paddedXMax = xMax + propertyPaddingR;
+						}
+						// Only closers won't have a name.
+						else /* (isNamedProp) */ [[likely]]
+						{
+							// This only happens when a name changes, which should be far less frequent than every frame.
+							if (prop.nameWidth == -1) [[unlikely]]
+							{
+								props[i].nameWidth = MeasureText(prop.name, fontSize);
+							}
 
+							paddedXMax = x + prop.nameWidth + propertyPaddingR;
+						}
+						int paddedYMax = yNext + propertyPaddingB;
 						int paddedW = paddedXMax - paddedXMin;
 						int paddedH = paddedYMax - paddedYMin;
 
 						DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
 
-						if (type == PropertyType::Header && isPressed)
+						// Already only one property will ever be hovered at a time.
+						// And on top of that, the user will be pressing m1 a lot less frequently than the visuals are drawn.
+						if (isHoverVis && type == PropertyType::Header && isPressed) [[unlikely]]
 						{
 							console::Log("Header collapse toggled");
 							props[i].isCollapsed = !prop.isCollapsed;
 						}
-					}
-					else if (prop.name) [[likely]] // Only closers won't have a name
-					{
-						if (prop.nameWidth == -1) [[unlikely]]
-						{
-							props[i].nameWidth = MeasureText(prop.name, fontSize);
-						}
-
-						int paddedXMin = x - propertyPaddingL;
-						int paddedYMin = y - propertyPaddingT;
-						int paddedXMax = x + prop.nameWidth + propertyPaddingR;
-						int paddedYMax = yNext + propertyPaddingB;
-
-						int paddedW = paddedXMax - paddedXMin;
-						int paddedH = paddedYMax - paddedYMin;
-
-						DrawRectangle(paddedXMin, paddedYMin, paddedW, paddedH, color);
 					}
 				}
 
