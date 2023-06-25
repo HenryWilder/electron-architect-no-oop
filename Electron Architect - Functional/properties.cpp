@@ -380,6 +380,43 @@ namespace properties
 
 			int lineHeightPrev = 0;
 
+			auto pop = [&indentDepth, &indentStack](int indentComplete, int y)
+			{
+				if (indentDepth == 0)
+				{
+					console::Error("properties - Collection popped when no collections remained");
+					return;
+				}
+
+				Indent indentInfo = indentStack[--indentDepth];
+
+				Color color = GetCollectionAccentColor(indentInfo.type);
+
+				int xStart = indentComplete;
+				int xEnd = xMax;
+
+				int yStart = indentInfo.yStart - halfFontToLine;
+				int yEnd = y + lineHeight / 2;
+
+				// Uncollapsed properties with collapsed nested properties seem to trigger this
+				if (yStart > yEnd)
+				{
+					console::Error("properties - Ended prior to beginning");
+				}
+
+				// Vertical line
+				if (yStart < yEnd)
+				{
+					DrawLine(xStart, yStart, xStart, yEnd, color);
+				}
+
+				// Horizontal line
+				if (xStart < xEnd)
+				{
+					DrawLine(xStart, yEnd, xEnd, yEnd, color);
+				}
+			};
+
 			for (size_t i = 0; i < drawableProperties; ++i)
 			{
 				const Property& prop = props[i];
@@ -443,40 +480,17 @@ namespace properties
 				// Pop
 				else if (type == PropertyType::Closer)
 				{
-					if (indentDepth == 0)
-					{
-						console::Error("properties - Collection popped when no collections remained");
-						return;
-					}
-
-					Indent indentInfo = indentStack[--indentDepth];
-
-					Color color = GetCollectionAccentColor(indentInfo.type);
-
-					int xStart = indentComplete;
-					int xEnd = xMax;
-
-					int yStart = indentInfo.yStart - halfFontToLine;
-					int yEnd = y + lineHeight / 2;
-
-					// Uncollapsed properties with collapsed nested properties seem to trigger this
-					if (yStart > yEnd)
-					{
-						console::Error("properties - Ended prior to beginning");
-					}
-
-					// Vertical line
-					if (yStart < yEnd)
-					{
-						DrawLine(xStart, yStart, xStart, yEnd, color);
-					}
-
-					// Horizontal line
-					if (xStart < xEnd)
-					{
-						DrawLine(xStart, yEnd, xEnd, yEnd, color);
-					}
+					pop(indentComplete, y);
 				}
+			}
+
+			// Complete remaining indent lines on the stack
+			while (indentDepth > 0)
+			{
+				int indent = (indentDepth - 1) * indentSize;
+				int indentComplete = xBaseline + indent;
+				int y = propertiesPanel.bounds.ymax;
+				pop(indentComplete, y);
 			}
 		}
 
