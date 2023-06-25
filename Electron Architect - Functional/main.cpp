@@ -142,8 +142,8 @@ int main()
 
     int mousePrevX{ }, mousePrevY{ };
 
-    int mousePrevXs[32] {};
-    int mousePrevYs[32] {};
+    int mousePrevXs[2] {};
+    int mousePrevYs[2] {};
 
 #pragma endregion
 
@@ -325,8 +325,8 @@ int main()
                 case PanelID::Graph:
                     graph::DrawPanelContents(
                         mouseCurrX, mouseCurrY,
+                        mousePrevXs[0], mousePrevYs[0],
                         mousePrevXs[1], mousePrevYs[1],
-                        mousePrevXs[2], mousePrevYs[2],
                         isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
                     break;
 
@@ -355,20 +355,15 @@ int main()
 
         EndDrawing();
 
-        mousePrevX = mouseCurrX;
-        mousePrevY = mouseCurrY;
-
-        // Push mouse prev
-        // Todo: Change to use circular buffer instead.
         {
-            for (size_t i = 4; i > 0; --i)
-            {
-                mousePrevXs[i - 1] = mousePrevXs[i - 2];
-                mousePrevYs[i - 1] = mousePrevYs[i - 2];
-            }
+            mousePrevXs[1] = mousePrevXs[0];
+            mousePrevYs[1] = mousePrevYs[0];
             mousePrevXs[0] = mousePrevX;
             mousePrevYs[0] = mousePrevY;
         }
+
+        mousePrevX = mouseCurrX;
+        mousePrevY = mouseCurrY;
     }
 
 #pragma endregion

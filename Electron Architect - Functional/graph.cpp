@@ -2,6 +2,7 @@
 #include "properties.hpp"
 #include "tools.hpp"
 #include "graph.hpp"
+#include <raymath.h>
 
 using panel::Panel;
 using panel::PanelID;
@@ -72,6 +73,8 @@ namespace graph
 	int gridOffsetX = 0;
 	int gridOffsetY = 0;
 
+	constexpr Color hoveredSpaceColor = { 255,255,0, 200 };
+
 	// Todo: Change to use a shader instead
 	void DrawGrid(const Bounds& clientBounds, const Rect& clientRect, int gridDisplaySize, int gridDisplaySize_WithLine)
 	{
@@ -101,15 +104,23 @@ namespace graph
 		}
 	}
 
+	// Draws a "smear" of the cursor
 	void DrawMouseTrail(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, float gridDisplaySize)
 	{
 		float gridDisplaySizeHalf = (float)gridDisplaySize * 0.5f;
 
-		Vector2 mouseOldCenter = { mousexOld, mouseyOld };
-		Vector2 mouseMidCenter = { mousexMid, mouseyMid };
-		Vector2 mouseNowCenter = { mousexNow, mouseyNow };
+		Vector2 mouseOld = { mousexOld, mouseyOld };
+		Vector2 mouseMid = { mousexMid, mouseyMid };
+		Vector2 mouseNow = { mousexNow, mouseyNow };
 
-		DrawLineBezierQuad(mouseOldCenter, mouseNowCenter, mouseMidCenter, gridDisplaySize, { 255,255,0, 63 });
+		float smearLength = sqrtf(Vector2DistanceSqr(mouseOld, mouseMid) + Vector2DistanceSqr(mouseMid, mouseNow));
+
+		smearLength /= 32.0f; // Smudge factor
+
+		float baseAlpha = (float)hoveredSpaceColor.a / 255.0f;
+		float smearAlpha = (smearLength == 0) ? baseAlpha : (baseAlpha / smearLength);
+
+		DrawLineBezierQuad(mouseOld, mouseNow, mouseMid, gridDisplaySize, ColorAlpha(hoveredSpaceColor, smearAlpha));
 	}
 
 	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover, bool isMousePressed)
@@ -138,15 +149,25 @@ namespace graph
 
 		if (allowHover)
 		{
-			int hoveredSpaceXNow = (int)(mousexNow / gridDisplaySize_WithLine) * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
-			int hoveredSpaceYNow = (int)(mouseyNow / gridDisplaySize_WithLine) * gridDisplaySize_WithLine;
-			int hoveredSpaceXMid = (int)(mousexMid / gridDisplaySize_WithLine) * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
-			int hoveredSpaceYMid = (int)(mouseyMid / gridDisplaySize_WithLine) * gridDisplaySize_WithLine;
+			// Todo: Space calculation isn't accounting for zoom!
+
+			int hoveredSpaceX = mousexNow / gridDisplaySize_WithLine;
+			int hoveredSpaceY = mouseyNow / gridDisplaySize_WithLine;
+			int hoveredSpaceXPrev = mousexOld / gridDisplaySize_WithLine;
+			int hoveredSpaceYPrev = mouseyOld / gridDisplaySize_WithLine;
+
+			int hoveredXSnapped = hoveredSpaceX * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
+			int hoveredYSnapped = hoveredSpaceY * gridDisplaySize_WithLine;
+
+			int hoveredXSnappedPrev = hoveredSpaceXPrev * gridDisplaySize_WithLine - 1; // No idea why the x is off by one like that
+			int hoveredYSnappedPrev = hoveredSpaceYPrev * gridDisplaySize_WithLine;
+
+			int moveDistance = abs(hoveredSpaceX - hoveredSpaceXPrev) + abs(hoveredSpaceY - hoveredSpaceYPrev);
 
 			// Only draw cursor if there is no movement
-			if (hoveredSpaceXNow == hoveredSpaceXMid && hoveredSpaceYNow == hoveredSpaceYMid)
+			if (moveDistance < 2)
 			{
-				DrawRectangle(hoveredSpaceXNow, hoveredSpaceYNow, gridDisplaySize, gridDisplaySize, { 255,255,0, 127 });
+				DrawRectangle(hoveredXSnapped, hoveredYSnapped, gridDisplaySize, gridDisplaySize, hoveredSpaceColor);
 			}
 			else
 			{
