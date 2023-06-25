@@ -562,7 +562,7 @@ namespace properties
 			// Current size of the indent stack
 			size_t indentDepth = 0;
 
-			int lineHeightPrev = 0;
+			int lineHeightPrev = clientBounds.ymin + panelPaddingY;
 
 			auto pop = [&indentDepth, &indentStack](int indentComplete, int y)
 			{
