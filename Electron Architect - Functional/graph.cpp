@@ -1,3 +1,5 @@
+#include <fstream>
+#include <string>
 #include "console.hpp"
 #include "properties.hpp"
 #include "tools.hpp"
@@ -26,6 +28,129 @@ namespace graph
 		.draggable = (panel::DraggableEdges)((int)panel::DraggableEdges::EdgeB | (int)panel::DraggableEdges::EdgeR)
 	};
 
+	constexpr size_t MAX_NODES = 4096;
+	constexpr size_t MAX_WIRES = 4096;
+
+	struct Node
+	{
+		NodeType type;
+		int x, y;
+		std::string name;
+	};
+
+	size_t numNodes = 0;
+	Node nodes[MAX_NODES] = {};
+
+	struct Wire
+	{
+		WireElbow elbow;
+		size_t startWire, endWire; // No null node pointers. A wire should not exist if it doesn't connect two existing nodes.
+	};
+
+	size_t numWires = 0;
+	Wire wires[MAX_WIRES] = {};
+
+	void Save(const char* filename)
+	{
+		std::ofstream file(filename);
+
+		int majorVersion = 2;
+		int minorVersion = 0;
+		int patchVersion = 0;
+
+		file << "v " << majorVersion << ' ' << minorVersion << ' ' << patchVersion << std::endl;
+
+		file << "n " << numNodes;
+		for (size_t i = 0; i < numNodes; ++i)
+		{
+			const Node& node = nodes[i];
+			file << '\n' << (char)node.type << ' ' << node.x << ' ' << node.y << " ```" << node.name << "```";
+		}
+		file << std::endl;
+
+		file << "w " << numWires;
+		for (size_t i = 0; i < numWires; ++i)
+		{
+			const Wire& wire = wires[i];
+			file << '\n' << (int)wire.elbow << ' ' << wire.startWire << ' ' << wire.endWire;
+		}
+		file << std::endl;
+
+		file.close();
+	}
+
+	void Load(const char* filename)
+	{
+		std::ifstream file(filename);
+
+		char regionCode = '\0';
+
+		file >> regionCode;
+		if (regionCode != 'v')
+		{
+			console::Error("graph: File is malformed or incompatible: Expected VERSION (v) region. Cancelling.");
+			return;
+		}
+		int majorVersion, minorVersion, patchVersion;
+		file >> majorVersion >> minorVersion >> patchVersion;
+
+		file >> regionCode;
+		if (regionCode != 'n')
+		{
+			console::Error("graph: File is malformed or incompatible: Expected NODE (n) region. Cancelling.");
+			return;
+		}
+		file >> numNodes;
+
+		for (size_t i = 0; i < numNodes; ++i)
+		{
+			Node& node = nodes[i];
+			char _type;
+			file >> _type;
+			node.type = (NodeType)_type;
+			file >> node.x >> node.y;
+
+			// I have concerns about this.
+			if (file.peek() != '\n' && !file.eof())
+			{
+				int ch;
+				constexpr size_t BUFF_MAX_SIZE = 512;
+				char buff[BUFF_MAX_SIZE] = {};
+				size_t strBuffSize = 0;
+				while ((ch = file.get()) != '\n')
+				{
+					buff[strBuffSize++] = ch;
+					if (strBuffSize == BUFF_MAX_SIZE - 1)
+					{
+						console::Warn("Node name exceeds maximum length of 511 characters. Some information will be lost.");
+					}
+				}
+				buff[strBuffSize] = '\0';
+				node.name.reserve(strBuffSize);
+				node.name = buff;
+			}
+		}
+
+		file >> regionCode;
+		if (regionCode != 'w')
+		{
+			console::Error("graph: File is malformed or incompatible: Expected WIRE (w) region. Cancelling.");
+			return;
+		}
+		file >> numWires;
+
+		for (size_t i = 0; i < numWires; ++i)
+		{
+			Wire& wire = wires[i];
+			int _elbow;
+			file >> _elbow;
+			wire.elbow = (WireElbow)_elbow;
+			file >> wire.startWire >> wire.endWire;
+		}
+
+		file.close();
+	}
+
 	// At gridMagnitude 0, this is the sidelength in pixels of a single gridspace.
 	// Excludes the width of the gridline.
 	constexpr int gridSize = 16;
@@ -40,43 +165,48 @@ namespace graph
 	constexpr Color   gridlineColor = { 127,127,127,  63 };
 	constexpr Color backgroundColor = {  20, 20, 20, 255 };
 
+	// Negatives are treated as division
+	// Zero is treated as 1x scale
 	int gridMagnitude = 0;
-
-	void Zoom(int amount)
-	{
-		gridMagnitude -= amount;
-		if (gridMagnitude > gridSize)
-		{
-			gridMagnitude = gridSize;
-		}
-		if (gridMagnitude < -gridSize)
-		{
-			gridMagnitude = -gridSize;
-		}
-
-#if _DEBUG && false
-		if (gridMagnitude > 0)
-		{
-			console::Logf("Zoomed to x/%i", (gridMagnitude + 1));
-		}
-		else if (gridMagnitude < 0)
-		{
-			console::Logf("Zoomed to %ix", (-gridMagnitude + 1));
-		}
-		else // gridMagnitude == 0
-		{
-			console::Log("Zoomed to 1x");
-		}
-#endif
-	}
 
 	int gridOffsetX = 0;
 	int gridOffsetY = 0;
 
+	int gridDisplaySize;
+	int gridDisplaySize_WithLine;
+
+	void UpdateGridDisplaySize()
+	{
+		if (gridMagnitude > 0)
+		{
+			gridDisplaySize = gridSize / (gridMagnitude + 1);
+		}
+		else if (gridMagnitude < 0)
+		{
+			gridDisplaySize = gridSize * (-gridMagnitude + 1);
+		}
+		else // gridMagnitude == 0
+		{
+			gridDisplaySize = gridSize;
+		}
+
+		gridDisplaySize_WithLine = gridDisplaySize + gridlineWidth;
+	}
+
 	constexpr Color hoveredSpaceColor = { 255,255,0, 200 };
 
+	int ScreenXToGridX(int x)
+	{
+		return 0;
+	}
+
+	int ScreenYToGridY(int y)
+	{
+		return 0;
+	}
+
 	// Todo: Change to use a shader instead
-	void DrawGrid(const Bounds& clientBounds, const Rect& clientRect, int gridDisplaySize, int gridDisplaySize_WithLine)
+	void DrawGrid(const Bounds& clientBounds, const Rect& clientRect)
 	{
 		const int edgeL = clientBounds.xmin;
 		const int edgeT = clientBounds.ymin;
@@ -105,7 +235,7 @@ namespace graph
 	}
 
 	// Draws a "smear" of the cursor
-	void DrawMouseTrail(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, float gridDisplaySize)
+	void DrawMouseTrail(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld)
 	{
 		float gridDisplaySizeHalf = (float)gridDisplaySize * 0.5f;
 
@@ -132,20 +262,21 @@ namespace graph
 		panel::BoundsToRect(clientRect, clientBounds);
 		DrawRectangle(clientRect.x, clientRect.y, clientRect.w, clientRect.h, backgroundColor);
 
-		int gridDisplaySize = gridSize;
+		DrawGrid(clientBounds, clientRect);
 
-		if (gridMagnitude > 0)
+		// Draw nodes
 		{
-			gridDisplaySize /= (gridMagnitude + 1);
+			float nodeRadius = (float)gridDisplaySize / 2.0f;
+			for (size_t i = 0; i < numNodes; ++i)
+			{
+				Vector2 position =
+				{
+					.x = (float)(nodes[i].x * gridDisplaySize_WithLine) + nodeRadius - 1.0f,
+					.y = (float)(nodes[i].y * gridDisplaySize_WithLine) + nodeRadius,
+				};
+				DrawCircleV(position, nodeRadius, BLUE);
+			}
 		}
-		else if (gridMagnitude < 0)
-		{
-			gridDisplaySize *= (-gridMagnitude + 1);
-		}
-
-		int gridDisplaySize_WithLine = gridDisplaySize + gridlineWidth;
-
-		DrawGrid(clientBounds, clientRect, gridDisplaySize, gridDisplaySize_WithLine);
 
 		if (allowHover)
 		{
@@ -171,8 +302,34 @@ namespace graph
 			}
 			else
 			{
-				DrawMouseTrail(mousexNow, mouseyNow, mousexMid, mouseyMid, mousexOld, mouseyOld, gridDisplaySize);
+				DrawMouseTrail(mousexNow, mouseyNow, mousexMid, mouseyMid, mousexOld, mouseyOld);
 			}
 		}
+	}
+
+	void Zoom(int amount)
+	{
+		gridMagnitude -= amount;
+		if (gridMagnitude > gridSize)
+		{
+			gridMagnitude = gridSize;
+		}
+		if (gridMagnitude < -gridSize)
+		{
+			gridMagnitude = -gridSize;
+		}
+	}
+
+	void AddNode(NodeType type, int screenx, int screeny)
+	{
+		int x = screenx / gridDisplaySize_WithLine;
+		int y = screeny / gridDisplaySize_WithLine;
+		Node createdNode =
+		{
+			.type = type,
+			.x = x,
+			.y = y,
+		};
+		nodes[numNodes++] = createdNode;
 	}
 }

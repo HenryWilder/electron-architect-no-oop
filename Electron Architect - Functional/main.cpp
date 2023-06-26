@@ -131,6 +131,8 @@ int main()
             } properties::AddCloser();
         } properties::AddCloser();
     } properties::AddCloser();
+
+    graph::UpdateGridDisplaySize();
 #endif
 
     Panel* currentlyWithin = nullptr;
@@ -290,6 +292,15 @@ int main()
             if (currentlyWithin->id == PanelID::Graph)
             {
                 graph::Zoom(scrollAmount);
+            }
+        }
+
+        // Graph input
+        if (!hoverDisabled && currentlyWithin->id == PanelID::Graph)
+        {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                graph::AddNode(graph::NodeType::Any, mouseCurrX, mouseCurrY);
             }
         }
 
