@@ -184,6 +184,7 @@
   <ItemGroup>
     <ClCompile Include="console.cpp" />
     <ClCompile Include="graph.cpp" />
+    <ClCompile Include="graph_algorithms.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="logtypes.c" />
     <ClCompile Include="panel.cpp" />
@@ -201,6 +202,8 @@
   <ItemGroup>
     <ClInclude Include="console.hpp" />
     <ClInclude Include="graph.hpp" />
+    <ClInclude Include="graph_algorithms.hpp" />
+    <ClInclude Include="list.hpp" />
     <ClInclude Include="utils.hpp" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="logtypes.h" />

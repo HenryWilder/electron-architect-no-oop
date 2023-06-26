@@ -1,5 +1,6 @@
 #pragma once
 #include "panel.hpp"
+#include <string>
 
 // Functions related to the circuit graphing feature of the program.
 namespace graph
@@ -20,6 +21,28 @@ namespace graph
 		VertDiagonal = 3,
 	};
 
+	constexpr size_t MAX_NODES = 4096;
+	constexpr size_t MAX_WIRES = 4096;
+
+	struct Node
+	{
+		NodeType type;
+		int x, y;
+		std::string name;
+	};
+
+	extern size_t numNodes;
+	extern Node nodes[MAX_NODES];
+
+	struct Wire
+	{
+		WireElbow elbow;
+		size_t startNode, endNode; // No null node pointers. A wire should not exist if it doesn't connect two existing nodes.
+	};
+
+	extern size_t numWires;
+	extern Wire wires[MAX_WIRES];
+
 	extern panel::Panel graphPanel;
 
 	// Number of grid spaces offset horizontally
@@ -38,4 +61,5 @@ namespace graph
 	void Zoom(int amount);
 
 	void AddNode(NodeType type, int screenx, int screeny);
+	void RemoveNode(int screenx, int screeny);
 }

@@ -28,24 +28,8 @@ namespace graph
 		.draggable = (panel::DraggableEdges)((int)panel::DraggableEdges::EdgeB | (int)panel::DraggableEdges::EdgeR)
 	};
 
-	constexpr size_t MAX_NODES = 4096;
-	constexpr size_t MAX_WIRES = 4096;
-
-	struct Node
-	{
-		NodeType type;
-		int x, y;
-		std::string name;
-	};
-
 	size_t numNodes = 0;
 	Node nodes[MAX_NODES] = {};
-
-	struct Wire
-	{
-		WireElbow elbow;
-		size_t startWire, endWire; // No null node pointers. A wire should not exist if it doesn't connect two existing nodes.
-	};
 
 	size_t numWires = 0;
 	Wire wires[MAX_WIRES] = {};
@@ -72,7 +56,7 @@ namespace graph
 		for (size_t i = 0; i < numWires; ++i)
 		{
 			const Wire& wire = wires[i];
-			file << '\n' << (int)wire.elbow << ' ' << wire.startWire << ' ' << wire.endWire;
+			file << '\n' << (int)wire.elbow << ' ' << wire.startNode << ' ' << wire.endNode;
 		}
 		file << std::endl;
 
@@ -145,7 +129,7 @@ namespace graph
 			int _elbow;
 			file >> _elbow;
 			wire.elbow = (WireElbow)_elbow;
-			file >> wire.startWire >> wire.endWire;
+			file >> wire.startNode >> wire.endNode;
 		}
 
 		file.close();
@@ -239,9 +223,9 @@ namespace graph
 	{
 		float gridDisplaySizeHalf = (float)gridDisplaySize * 0.5f;
 
-		Vector2 mouseOld = { mousexOld, mouseyOld };
-		Vector2 mouseMid = { mousexMid, mouseyMid };
-		Vector2 mouseNow = { mousexNow, mouseyNow };
+		Vector2 mouseOld = { (float)mousexOld, (float)mouseyOld };
+		Vector2 mouseMid = { (float)mousexMid, (float)mouseyMid };
+		Vector2 mouseNow = { (float)mousexNow, (float)mouseyNow };
 
 		float smearLength = sqrtf(Vector2DistanceSqr(mouseOld, mouseMid) + Vector2DistanceSqr(mouseMid, mouseNow));
 
@@ -250,7 +234,7 @@ namespace graph
 		float baseAlpha = (float)hoveredSpaceColor.a / 255.0f;
 		float smearAlpha = (smearLength == 0) ? baseAlpha : (baseAlpha / smearLength);
 
-		DrawLineBezierQuad(mouseOld, mouseNow, mouseMid, gridDisplaySize, ColorAlpha(hoveredSpaceColor, smearAlpha));
+		DrawLineBezierQuad(mouseOld, mouseNow, mouseMid, (float)gridDisplaySize, ColorAlpha(hoveredSpaceColor, smearAlpha));
 	}
 
 	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover, bool isMousePressed)
@@ -263,20 +247,6 @@ namespace graph
 		DrawRectangle(clientRect.x, clientRect.y, clientRect.w, clientRect.h, backgroundColor);
 
 		DrawGrid(clientBounds, clientRect);
-
-		// Draw nodes
-		{
-			float nodeRadius = (float)gridDisplaySize / 2.0f;
-			for (size_t i = 0; i < numNodes; ++i)
-			{
-				Vector2 position =
-				{
-					.x = (float)(nodes[i].x * gridDisplaySize_WithLine) + nodeRadius - 1.0f,
-					.y = (float)(nodes[i].y * gridDisplaySize_WithLine) + nodeRadius,
-				};
-				DrawCircleV(position, nodeRadius, BLUE);
-			}
-		}
 
 		if (allowHover)
 		{
@@ -305,6 +275,20 @@ namespace graph
 				DrawMouseTrail(mousexNow, mouseyNow, mousexMid, mouseyMid, mousexOld, mouseyOld);
 			}
 		}
+
+		// Draw nodes
+		{
+			float nodeRadius = (float)gridDisplaySize / 2.0f;
+			for (size_t i = 0; i < numNodes; ++i)
+			{
+				Vector2 position =
+				{
+					.x = (float)(nodes[i].x * gridDisplaySize_WithLine) + nodeRadius - 1.0f,
+					.y = (float)(nodes[i].y * gridDisplaySize_WithLine) + nodeRadius,
+				};
+				DrawCircleV(position, nodeRadius, BLUE);
+			}
+		}
 	}
 
 	void Zoom(int amount)
@@ -318,18 +302,5 @@ namespace graph
 		{
 			gridMagnitude = -gridSize;
 		}
-	}
-
-	void AddNode(NodeType type, int screenx, int screeny)
-	{
-		int x = screenx / gridDisplaySize_WithLine;
-		int y = screeny / gridDisplaySize_WithLine;
-		Node createdNode =
-		{
-			.type = type,
-			.x = x,
-			.y = y,
-		};
-		nodes[numNodes++] = createdNode;
 	}
 }
