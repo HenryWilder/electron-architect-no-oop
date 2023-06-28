@@ -128,7 +128,10 @@ namespace graph
 			int _elbow;
 			file >> _elbow;
 			wire.elbow = (WireElbow)_elbow;
-			file >> wire.startNode >> wire.endNode;
+			size_t startNodeIndex, endNodeIndex;
+			file >> startNodeIndex >> endNodeIndex;
+			wire.startNode = &nodes[startNodeIndex];
+			wire.endNode = &nodes[endNodeIndex];
 		}
 
 		file.close();

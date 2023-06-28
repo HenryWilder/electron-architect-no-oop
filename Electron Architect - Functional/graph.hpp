@@ -49,10 +49,12 @@ namespace graph
 		VertDiagonal = 3,
 	};
 
+	// @No null node pointers. A wire should not exist if it doesn't connect two existing nodes.
 	struct Wire
 	{
 		WireElbow elbow;
-		size_t startNode, endNode; // No null node pointers. A wire should not exist if it doesn't connect two existing nodes.
+		Node* startNode;
+		Node* endNode;
 	};
 
 	constexpr size_t MAX_WIRES = 4096;

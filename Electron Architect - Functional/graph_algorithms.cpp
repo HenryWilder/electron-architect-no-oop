@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "graph_algorithms.hpp"
 
 namespace graph
@@ -23,36 +24,39 @@ namespace graph
 		nodes[numNodes++] = createdNode;
 	}
 
-	void AddWire(WireElbow elbow, size_t startNode, size_t endNode)
+	void AddWire(WireElbow elbow, Node* startNode, Node* endNode)
 	{
+		wires[numWires++] = Wire
 		{
-			Wire createdWire =
-			{
-				.elbow = elbow,
-				.startNode = startNode,
-				.endNode = endNode,
-			};
-			wires[numWires++] = createdWire;
-		}
+			.elbow = elbow,
+			.startNode = startNode,
+			.endNode = endNode,
+		};
 	}
 
 	// Removes the nodes in nodeIndicesToRemove and numNodesToRemove.
 	void RemoveSelectedNodes()
 	{
-		for (size_t offset = 1; offset <= numNodesSelected; ++offset)
 		{
-			for (size_t i = nodesSelected[offset - 1] + 1; i < nodesSelected[offset]; ++i)
+			size_t index = 0;
+			auto pred = [&index](const Node& node)
 			{
-				nodes[i - offset] = nodes[i];
-			}
-
-			for (size_t i = 0; i < numWires; ++i)
-			{
-				if (nodesSelected[offset - 1] < wires[i].startNode && wires[i].startNode < nodesSelected[offset])
+				if (index == numNodesSelected)
 				{
-
+					return false;
 				}
-			}
+
+				size_t nodeIndex = &node - nodes;
+				if (nodeIndex == nodesSelected[index])
+				{
+					++index;
+					return true;
+				}
+				return false;
+			};
+			std::stable_partition(nodes, nodes + numNodes, pred);
+			size_t numRemoved = index + 1;
+			numNodes -= numRemoved;
 		}
 	}
 
