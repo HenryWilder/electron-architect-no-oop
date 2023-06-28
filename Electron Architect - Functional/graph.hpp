@@ -1,10 +1,27 @@
 #pragma once
-#include "panel.hpp"
 #include <string>
+#include "panel.hpp"
 
 // Functions related to the circuit graphing feature of the program.
 namespace graph
 {
+	// At gridMagnitude 0, this is the sidelength in pixels of a single gridspace.
+	// Excludes the width of the gridline.
+	constexpr int gridSize = 16;
+
+	// Independent of zoom
+	constexpr int gridlineWidth = 1;
+
+	// Negatives are treated as division
+	// Zero is treated as 1x scale
+	extern int gridMagnitude;
+
+	extern int gridOffsetX;
+	extern int gridOffsetY;
+
+	extern int gridDisplaySize;
+	extern int gridDisplaySize_WithLine;
+
 	enum class NodeType : char
 	{
 		Any = '|',
@@ -12,6 +29,17 @@ namespace graph
 		Non = '!',
 		One = '^',
 	};
+
+	struct Node
+	{
+		NodeType type;
+		int x, y;
+		std::string name;
+	};
+
+	constexpr size_t MAX_NODES = 4096;
+	extern size_t numNodes;
+	extern Node nodes[MAX_NODES];
 
 	enum class WireElbow : unsigned char
 	{
@@ -21,25 +49,13 @@ namespace graph
 		VertDiagonal = 3,
 	};
 
-	constexpr size_t MAX_NODES = 4096;
-	constexpr size_t MAX_WIRES = 4096;
-
-	struct Node
-	{
-		NodeType type;
-		int x, y;
-		std::string name;
-	};
-
-	extern size_t numNodes;
-	extern Node nodes[MAX_NODES];
-
 	struct Wire
 	{
 		WireElbow elbow;
 		size_t startNode, endNode; // No null node pointers. A wire should not exist if it doesn't connect two existing nodes.
 	};
 
+	constexpr size_t MAX_WIRES = 4096;
 	extern size_t numWires;
 	extern Wire wires[MAX_WIRES];
 

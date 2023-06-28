@@ -1,10 +1,12 @@
 #pragma once
-#include "panel.hpp"
 #include <concepts>
+#include "panel.hpp"
 
 // Functions related to the Properties panel.
 namespace properties
 {
+    extern panel::Panel propertiesPanel;
+
     enum class PropValueType
     {
         Bool,
@@ -22,7 +24,48 @@ namespace properties
         Map,
     };
 
-    extern panel::Panel propertiesPanel;
+    // If neither name nor valueStr is nullptr, this is a regular property.
+    // If valueStr is nullptr but not name, this is a header.
+    // If name is nullptr but not valueStr, this is INVALID
+    // If both name and valueStr are nullptr, this is a closer.
+    struct Property
+    {
+        // The name of the property
+        const char* name = nullptr;
+
+        // Format - Only use when value is a pointer to a value and not a value
+        const char* fmt = nullptr;
+
+        // Assumed to be a c-string when fmt is null. Otherwise, assumed to be a pointer to a value specified by the format.
+        // ! Should NEVER be nullptr if fmt is set.
+        const void* value = nullptr;
+
+        // Only meaningful on values
+        PropValueType valueType = PropValueType::Any;
+
+        // Only meaningful on headers
+        PropCollectionType collectionType = PropCollectionType::Object;
+
+        // Set anytime name changes (hopefully only once)
+        int nameWidth = -1;
+
+        // Whether the valueStr content is heap memory and needs to be freed before overwriting or closing the program
+        // Technically, it just means whether it is the properties panel's duty to free it.
+        // Heap memory may still be passed in; but if it wasn't allocated by the properties panel, it won't be freed by the properties panel.
+        // ! Should not be used if fmt is non-null
+        bool usesHeap = false;
+
+        // Only meaningful on headers
+        // If true, hide everything until the matching closer
+        bool isCollapsed = true;
+
+        // The last time this was hovered - used in animations
+        double lastHovered = 0.0;
+    };
+
+    constexpr size_t MAX_PROPS = 1024;
+    extern Property props[MAX_PROPS];
+    extern int numProps;
 
     constexpr int lineHeight = 16;
 

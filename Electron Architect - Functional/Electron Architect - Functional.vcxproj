@@ -183,12 +183,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="console.cpp" />
+    <ClCompile Include="console_draw.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="graph_algorithms.cpp" />
+    <ClCompile Include="graph_draw.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="logtypes.c" />
     <ClCompile Include="panel.cpp" />
     <ClCompile Include="properties.cpp" />
+    <ClCompile Include="properties_draw.cpp" />
     <ClCompile Include="serialize.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="main.cpp" />
@@ -203,7 +206,6 @@
     <ClInclude Include="console.hpp" />
     <ClInclude Include="graph.hpp" />
     <ClInclude Include="graph_algorithms.hpp" />
-    <ClInclude Include="list.hpp" />
     <ClInclude Include="utils.hpp" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="logtypes.h" />

@@ -1,5 +1,6 @@
 #ifndef LOGTYPES_H
 #define LOGTYPES_H
+#include <raylib.h>
 
 typedef enum LogType
 {
@@ -15,7 +16,8 @@ typedef enum LogType
 
 typedef struct Style
 {
-	Color color, backgroundColor;
+	Color color;
+	Color backgroundColor;
 } Style;
 
 // Width of the "log type" segment of the log element
