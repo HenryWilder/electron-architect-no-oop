@@ -77,7 +77,7 @@ namespace properties
     // @param mouseyPrev: Mouse y last frame - Used for making effects appear continuous in spite of discrete mouse position
     // @param allowHover: Whether mouse hover is already consumed for something else
     // @param isPressed: Whether the mouse was clicked
-    void DrawPanelContents(int mousex, int mousey, int mouseyPrev, bool allowHover, bool isPressed);
+    void DrawPanelContents(int mousex, int mousey, int mouseyPrev, bool allowHover);
 
     // A unique ID for tracking whether the property list needs to be cleared.
     extern size_t showingPropertiesFor;

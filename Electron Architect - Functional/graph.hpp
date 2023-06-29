@@ -39,7 +39,7 @@ namespace graph
 
 	constexpr size_t MAX_NODES = 4096;
 	extern size_t numNodes;
-	extern Node nodes[MAX_NODES];
+	extern Node* nodes[MAX_NODES];
 
 	enum class WireElbow : unsigned char
 	{
@@ -59,7 +59,7 @@ namespace graph
 
 	constexpr size_t MAX_WIRES = 4096;
 	extern size_t numWires;
-	extern Wire wires[MAX_WIRES];
+	extern Wire* wires[MAX_WIRES];
 
 	extern panel::Panel graphPanel;
 
@@ -74,7 +74,7 @@ namespace graph
 	// Call this after performing modifications to zoom/offset, and prior to placing elements
 	void UpdateGridDisplaySize();
 
-	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover, bool isMousePressed);
+	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover);
 
 	void Zoom(int amount);
 

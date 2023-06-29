@@ -298,6 +298,10 @@ int main()
         // Graph input
         if (!hoverDisabled && currentlyWithin->id == PanelID::Graph)
         {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+            {
+                graph::RemoveNode(mouseCurrX, mouseCurrY);
+            }
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
                 graph::AddNode(graph::NodeType::Any, mouseCurrX, mouseCurrY);
@@ -326,11 +330,16 @@ int main()
                 switch (currentPanel->id)
                 {
                 case PanelID::Console:
-                    console::DrawPanelContents(mouseCurrX, mouseCurrY, isHoverNeeded);
+                    console::DrawPanelContents(
+                        mouseCurrX, mouseCurrY,
+                        isHoverNeeded);
                     break;
 
                 case PanelID::Properties:
-                    properties::DrawPanelContents(mouseCurrX, mouseCurrY, mousePrevY, isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+                    properties::DrawPanelContents(
+                        mouseCurrX, mouseCurrY,
+                        mousePrevY,
+                        isHoverNeeded);
                     break;
 
                 case PanelID::Graph:
@@ -338,7 +347,7 @@ int main()
                         mouseCurrX, mouseCurrY,
                         mousePrevXs[0], mousePrevYs[0],
                         mousePrevXs[1], mousePrevYs[1],
-                        isHoverNeeded, IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+                        isHoverNeeded);
                     break;
 
                 case PanelID::Tools:

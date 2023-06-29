@@ -16,6 +16,9 @@
     <Filter Include="Source Files\Drawing Functions">
       <UniqueIdentifier>{63f9de5a-1491-48bb-8352-74a2f942b671}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\advanced">
+      <UniqueIdentifier>{7652139b-49f9-4caf-8a1f-7924f182bff9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -54,9 +57,6 @@
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="graph_algorithms.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="graph_draw.cpp">
       <Filter>Source Files\Drawing Functions</Filter>
     </ClCompile>
@@ -65,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="console_draw.cpp">
       <Filter>Source Files\Drawing Functions</Filter>
+    </ClCompile>
+    <ClCompile Include="graph_algorithms.cpp">
+      <Filter>Source Files\advanced</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

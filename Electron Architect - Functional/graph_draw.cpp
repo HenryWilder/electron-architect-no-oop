@@ -66,7 +66,7 @@ namespace graph
 		DrawLineBezierQuad(mouseOld, mouseNow, mouseMid, (float)gridDisplaySize, ColorAlpha(hoveredSpaceColor, smearAlpha));
 	}
 
-	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover, bool isMousePressed)
+	void DrawPanelContents(int mousexNow, int mouseyNow, int mousexMid, int mouseyMid, int mousexOld, int mouseyOld, bool allowHover)
 	{
 		Bounds clientBounds = panel::PanelClientBounds(graphPanel);
 
@@ -112,8 +112,8 @@ namespace graph
 			{
 				Vector2 position =
 				{
-					.x = (float)(nodes[i].x * gridDisplaySize_WithLine) + nodeRadius - 1.0f,
-					.y = (float)(nodes[i].y * gridDisplaySize_WithLine) + nodeRadius,
+					.x = (float)(nodes[i]->x * gridDisplaySize_WithLine) + nodeRadius - 1.0f,
+					.y = (float)(nodes[i]->y * gridDisplaySize_WithLine) + nodeRadius,
 				};
 				DrawCircleV(position, nodeRadius, BLUE);
 			}

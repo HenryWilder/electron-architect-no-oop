@@ -199,7 +199,7 @@ namespace properties
 		}
 	};
 
-	void DrawPanelContents(int mousex, int mousey, int mouseyPrev, bool allowHover, bool isPressed)
+	void DrawPanelContents(int mousex, int mousey, int mouseyPrev, bool allowHover)
 	{
 	#if _DEBUG
 		// Check for unbalanced collections
@@ -472,7 +472,7 @@ namespace properties
 						propEditable.lastHovered = previousFrameTime;
 					}
 
-					bool isUserCollapsingProp = isPressed && isHoverVis && isPropCollapsable;
+					bool isUserCollapsingProp = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && isHoverVis && isPropCollapsable;
 
 					// This only happens when a name changes, which should be far less frequent than every frame.
 					if (isPropWidthDirty) [[unlikely]]

@@ -27,11 +27,14 @@ namespace graph
 		.draggable = (panel::DraggableEdges)((int)panel::DraggableEdges::EdgeB | (int)panel::DraggableEdges::EdgeR)
 	};
 
+	Node nodeMemory[MAX_NODES] = {};
+	Node wireMemory[MAX_NODES] = {};
+
 	size_t numNodes = 0;
-	Node nodes[MAX_NODES] = {};
+	Node* nodes[MAX_NODES] = {};
 
 	size_t numWires = 0;
-	Wire wires[MAX_WIRES] = {};
+	Wire* wires[MAX_WIRES] = {};
 
 	void Save(const char* filename)
 	{
@@ -46,16 +49,83 @@ namespace graph
 		file << "n " << numNodes;
 		for (size_t i = 0; i < numNodes; ++i)
 		{
-			const Node& node = nodes[i];
-			file << '\n' << (char)node.type << ' ' << node.x << ' ' << node.y << " ```" << node.name << "```";
+			const Node* node = nodes[i];
+			file << '\n' << (char)node->type << ' ' << node->x << ' ' << node->y << " ```" << node->name << "```";
 		}
 		file << std::endl;
 
 		file << "w " << numWires;
+
+		struct NodeCacheItem
+		{
+			Node* nodePtr;
+			size_t index;
+		};
+
+		constexpr size_t NODE_SERIALIZATION_CACHE_MAX = 32;
+
+		// A short list of recently referenced nodes that may reappear soon.
+		// This is like short-term memory.
+		// In the form of a circular buffer.
+		NodeCacheItem cache[NODE_SERIALIZATION_CACHE_MAX] = {};
+		size_t newestCacheItemIndex = -1;
+		size_t numCacheItems = 0;
+
 		for (size_t i = 0; i < numWires; ++i)
 		{
-			const Wire& wire = wires[i];
-			file << '\n' << (int)wire.elbow << ' ' << wire.startNode << ' ' << wire.endNode;
+			const Wire* wire = wires[i];
+			size_t startNodeIndex = (size_t)(-1);
+			size_t endNodeIndex   = (size_t)(-1);
+
+			bool isStartNodeFound = false;
+			bool isEndNodeFound   = false;
+
+			for (size_t i = newestCacheItemIndex; i < numCacheItems && !isStartNodeFound && !isEndNodeFound; ++i %= NODE_SERIALIZATION_CACHE_MAX)
+			{
+				bool isStartNode = nodes[i] == wire->startNode;
+				bool isEndNode   = nodes[i] == wire->  endNode;
+				if (nodes[i] == wire->startNode) [[unlikely]]
+				{
+					startNodeIndex = i;
+					isStartNodeFound = true;
+				}
+				else if (nodes[i] == wire->endNode) [[unlikely]]
+				{
+					endNodeIndex = i;
+					isEndNodeFound = true;
+				}
+			}
+
+			for (size_t i = 0; i < numNodes && !isStartNodeFound && !isEndNodeFound; ++i)
+			{
+				bool isStartNode = nodes[i] == wire->startNode;
+				bool isEndNode   = nodes[i] == wire->  endNode;
+
+				if (!isStartNode && !isEndNode) [[likely]]
+				{
+					continue;
+				}
+
+				cache[++newestCacheItemIndex %= NODE_SERIALIZATION_CACHE_MAX] =
+				{
+					.nodePtr = nodes[i],
+					.index = i,
+				};
+				numCacheItems = std::max(numCacheItems + 1, NODE_SERIALIZATION_CACHE_MAX);
+
+				if (isStartNode)
+				{
+					startNodeIndex = i;
+					isStartNodeFound = true;
+				}
+				else if (isEndNode)
+				{
+					endNodeIndex = i;
+					isEndNodeFound = true;
+				}
+			}
+
+			file << '\n' << (int)wire->elbow << ' ' << wire->startNode << ' ' << wire->endNode;
 		}
 		file << std::endl;
 
@@ -87,11 +157,11 @@ namespace graph
 
 		for (size_t i = 0; i < numNodes; ++i)
 		{
-			Node& node = nodes[i];
+			Node* node = nodes[i];
 			char _type;
 			file >> _type;
-			node.type = (NodeType)_type;
-			file >> node.x >> node.y;
+			node->type = (NodeType)_type;
+			file >> node->x >> node->y;
 
 			// I have concerns about this.
 			if (file.peek() != '\n' && !file.eof())
@@ -109,8 +179,8 @@ namespace graph
 					}
 				}
 				buff[strBuffSize] = '\0';
-				node.name.reserve(strBuffSize);
-				node.name = buff;
+				node->name.reserve(strBuffSize);
+				node->name = buff;
 			}
 		}
 
@@ -124,14 +194,14 @@ namespace graph
 
 		for (size_t i = 0; i < numWires; ++i)
 		{
-			Wire& wire = wires[i];
+			Wire* wire = wires[i];
 			int _elbow;
 			file >> _elbow;
-			wire.elbow = (WireElbow)_elbow;
+			wire->elbow = (WireElbow)_elbow;
 			size_t startNodeIndex, endNodeIndex;
 			file >> startNodeIndex >> endNodeIndex;
-			wire.startNode = &nodes[startNodeIndex];
-			wire.endNode = &nodes[endNodeIndex];
+			wire->startNode = nodes[startNodeIndex];
+			wire->endNode = nodes[endNodeIndex];
 		}
 
 		file.close();

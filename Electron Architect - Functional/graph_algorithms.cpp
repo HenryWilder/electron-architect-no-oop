@@ -5,17 +5,17 @@ namespace graph
 {
 	extern int gridDisplaySize_WithLine; // Defined in graph.cpp
 
-	size_t nodesSelected[MAX_NODES] = {};
+	const Node* nodesSelected[MAX_NODES] = {};
 	size_t numNodesSelected = 0;
 
-	size_t wiresSelected[MAX_WIRES] = {};
+	const Wire* wiresSelected[MAX_WIRES] = {};
 	size_t numWiresSelected = 0;
 
 	void AddNode(NodeType type, int screenx, int screeny)
 	{
 		int x = screenx / gridDisplaySize_WithLine;
 		int y = screeny / gridDisplaySize_WithLine;
-		Node createdNode =
+		Node* createdNode = new Node
 		{
 			.type = type,
 			.x = x,
@@ -26,12 +26,13 @@ namespace graph
 
 	void AddWire(WireElbow elbow, Node* startNode, Node* endNode)
 	{
-		wires[numWires++] = Wire
+		Wire* createdWire = new Wire
 		{
 			.elbow = elbow,
 			.startNode = startNode,
 			.endNode = endNode,
 		};
+		wires[numWires++] = createdWire;
 	}
 
 	// Removes the nodes in nodeIndicesToRemove and numNodesToRemove.
@@ -39,15 +40,14 @@ namespace graph
 	{
 		{
 			size_t index = 0;
-			auto pred = [&index](const Node& node)
+			auto pred = [&index](const Node* node)
 			{
 				if (index == numNodesSelected)
 				{
 					return false;
 				}
 
-				size_t nodeIndex = &node - nodes;
-				if (nodeIndex == nodesSelected[index])
+				if (node == nodesSelected[index])
 				{
 					++index;
 					return true;
@@ -55,8 +55,13 @@ namespace graph
 				return false;
 			};
 			std::stable_partition(nodes, nodes + numNodes, pred);
-			size_t numRemoved = index + 1;
-			numNodes -= numRemoved;
+
+			for (size_t i = 0; i < numNodesSelected; ++i)
+			{
+				delete nodesSelected[i];
+			}
+
+			numNodes -= numNodesSelected;
 		}
 	}
 
@@ -78,19 +83,19 @@ namespace graph
 
 		for (size_t i = 0; i < numNodes; ++i)
 		{
-			const Node& node = nodes[i];
+			const Node* node = nodes[i];
 
-			for (size_t i = 0; i < numRanges; ++i)
+			for (size_t j = 0; j < numRanges; ++j)
 			{
-				const panel::Bounds& range = screenRanges[i];
+				const panel::Bounds& range = screenRanges[j];
 
 				bool isInRange =
-					range.xmin <= node.x && node.x <= range.xmax &&
-					range.ymin <= node.y && node.y <= range.ymax;
+					range.xmin <= node->x && node->x <= range.xmax &&
+					range.ymin <= node->y && node->y <= range.ymax;
 
 				if (isInRange)
 				{
-					nodesSelected[numNodesSelected++] = i;
+					nodesSelected[numNodesSelected++] = node;
 					break; // Only include once
 				}
 			}
