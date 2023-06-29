@@ -277,8 +277,11 @@ int main()
         int scrollAmount = (int)GetMouseWheelMove();
         if (!hoverDisabled && scrollAmount != 0)
         {
+            switch (currentlyWithin->id)
+            {
+
             // Scroll within properties panel
-            if (currentlyWithin->id == PanelID::Properties)
+            case PanelID::Properties:
             {
                 constexpr int linesPerScroll = 4;
                 properties::scrollY -= scrollAmount * properties::lineHeight * linesPerScroll;
@@ -287,11 +290,16 @@ int main()
                     properties::scrollY = 0;
                 }
             }
+                break;
 
             // Scroll within graph panel
-            if (currentlyWithin->id == PanelID::Graph)
+            case PanelID::Graph:
             {
                 graph::Zoom(scrollAmount);
+                graph::UpdateGridDisplaySize();
+            }
+                break;
+
             }
         }
 
