@@ -44,15 +44,15 @@ namespace graph
 			{
 				if (index == numNodesSelected)
 				{
-					return false;
+					return true;
 				}
 
 				if (node == nodesSelected[index])
 				{
 					++index;
-					return true;
+					return false;
 				}
-				return false;
+				return true;
 			};
 			std::stable_partition(nodes, nodes + numNodes, pred);
 
